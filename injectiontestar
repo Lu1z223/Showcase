@@ -15,20 +15,14 @@ local Drawings = {}
 local function AplicarModificacoes(humanoid)
     if not humanoid then return end
 
-    -- Proteção contra sobrescrita de speed
+    -- Proteção contra sobrescrita de speed removida do loop antigo
     if SpeedAtivo then
         humanoid.WalkSpeed = VelocidadeDesejada
-        task.spawn(function()
-            while SpeedAtivo and humanoid do
-                humanoid.WalkSpeed = VelocidadeDesejada
-                task.wait(0.1)
-            end
-        end)
     else
         humanoid.WalkSpeed = 16
     end
 
-    -- Proteção contra sobrescrita de jump
+    -- Jump normal (não alterado)
     if JumpAtivo then
         humanoid.JumpPower = JumpPowerDesejado
         humanoid.UseJumpPower = true
@@ -44,6 +38,16 @@ local function AplicarModificacoes(humanoid)
         humanoid.UseJumpPower = true
     end
 end
+
+-- Mantém o speed sempre forçado
+RunService.Heartbeat:Connect(function()
+    if SpeedAtivo then
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = VelocidadeDesejada
+        end
+    end
+end)
 
 -- 🧍 Reaplica modificações ao renascer
 LocalPlayer.CharacterAdded:Connect(function(character)
