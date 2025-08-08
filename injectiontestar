@@ -59,7 +59,7 @@ end)
 local function CriarInterface()
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.ResetOnSpawn = false
-    gui.Name = "PainelHack"
+    gui.Name = "Injection - Roblox"
 
     local frame = Instance.new("Frame", gui)
     frame.Size = UDim2.new(0, 200, 0, 180)
