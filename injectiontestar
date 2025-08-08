@@ -1,148 +1,123 @@
--- 🌊 Script ESP + Speed + Jump Alto (Team Check + Interface Azul)
--- ✅ Jogo: Roube Um Brainrot | Uso autorizado para testes
+-- ✅ ESP + Speed (suave) + Jump corrigidos para "Roube Um Brainrot"
+-- ✅ Interface Azul
+-- ✅ Autorizado para testes
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Configurações iniciais
-local espAtivo = false
-local speedAtivo = false
-local jumpAtivo = false
-local speedValor = 50
-local jumpValor = 100
-local corESP = Color3.fromRGB(0, 162, 255) -- Azul do ESP
+local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
+local VelocidadeDesejada = 50
+local JumpPowerDesejado = 100
+local Drawings = {}
 
--- Criar interface azul
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "InterfaceAzul"
-ScreenGui.Parent = game.CoreGui
+-- 🎨 Cria GUI com cor azul
+local function CriarInterface()
+    local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+    gui.ResetOnSpawn = false
+    gui.Name = "PainelHack"
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 210, 0, 160)
-frame.Position = UDim2.new(0, 20, 0, 20)
-frame.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
-frame.BorderSizePixel = 0
-frame.Parent = ScreenGui
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 200, 0, 180)
+    frame.Position = UDim2.new(0, 10, 0, 10)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
+    frame.BorderSizePixel = 0
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = frame
+    local titulo = Instance.new("TextLabel", frame)
+    titulo.Size = UDim2.new(1, 0, 0, 30)
+    titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+    titulo.Text = "Painel de Hacks"
+    titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titulo.TextSize = 18
+    titulo.Font = Enum.Font.SourceSansBold
 
-local titulo = Instance.new("TextLabel")
-titulo.Size = UDim2.new(1, 0, 0, 30)
-titulo.BackgroundTransparency = 1
-titulo.Text = "🌊 MENU INJECTION"
-titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
-titulo.Font = Enum.Font.SourceSansBold
-titulo.TextSize = 20
-titulo.Parent = frame
+    local function CriarBotao(texto, posY, aoClicar)
+        local botao = Instance.new("TextButton", frame)
+        botao.Size = UDim2.new(1, -20, 0, 30)
+        botao.Position = UDim2.new(0, 10, 0, posY)
+        botao.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
+        botao.TextColor3 = Color3.new(1, 1, 1)
+        botao.Font = Enum.Font.SourceSans
+        botao.TextSize = 16
+        botao.Text = texto
+        botao.MouseButton1Click:Connect(function()
+            aoClicar(botao)
+        end)
+    end
 
--- Função para criar botões
-local function criarBotao(nome, ordem, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 180, 0, 30)
-    btn.Position = UDim2.new(0, 15, 0, 35 + (ordem * 35))
-    btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- começa vermelho (desativado)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 16
-    btn.Text = nome .. ": DESATIVADO"
-    btn.Parent = frame
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
-    
-    btn.MouseButton1Click:Connect(function()
-        local status = callback()
-        if status then
-            btn.Text = nome .. ": ATIVADO"
-            btn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-        else
-            btn.Text = nome .. ": DESATIVADO"
-            btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-        end
+    CriarBotao("ESP: OFF", 40, function(btn)
+        ESPAtivo = not ESPAtivo
+        btn.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
+    end)
+
+    CriarBotao("Speed: OFF", 80, function(btn)
+        SpeedAtivo = not SpeedAtivo
+        btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
+    end)
+
+    CriarBotao("Jump: OFF", 120, function(btn)
+        JumpAtivo = not JumpAtivo
+        btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
     end)
 end
 
--- Função ESP
-local function criarESP(player)
+-- 🔲 Cria caixa 2D para cada jogador
+local function CriarCaixa(plr)
     local box = Drawing.new("Square")
+    box.Visible = false
     box.Thickness = 2
-    box.Color = corESP
+    box.Color = Color3.fromRGB(0, 255, 255)
     box.Filled = false
+    Drawings[plr] = box
+end
 
-    RunService.RenderStepped:Connect(function()
-        if espAtivo 
-        and player ~= LocalPlayer 
-        and player.Character 
-        and player.Character:FindFirstChild("HumanoidRootPart") 
-        and player.Team ~= LocalPlayer.Team then
-            
-            local pos, vis = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
-            if vis then
-                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-                local head = player.Character:FindFirstChild("Head")
-                if humanoid and head then
-                    local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                    local legPos = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position - Vector3.new(0, 3, 0))
-                    local height = math.abs(headPos.Y - legPos.Y)
+-- 🔁 Atualiza as caixas no ESP
+RunService.RenderStepped:Connect(function()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            if not Drawings[plr] then
+                CriarCaixa(plr)
+            end
+            local box = Drawings[plr]
+            local char = plr.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local head = char and char:FindFirstChild("Head")
+
+            if ESPAtivo and hrp and head and (not plr.Team or plr.Team ~= LocalPlayer.Team) then
+                local top = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                local bottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 2.5, 0))
+                if bottom.Z > 0 then
+                    local height = math.abs(top.Y - bottom.Y)
                     local width = height / 2
                     box.Size = Vector2.new(width, height)
-                    box.Position = Vector2.new(pos.X - width/2, pos.Y - height/2)
+                    box.Position = Vector2.new(top.X - width / 2, top.Y)
                     box.Visible = true
+                else
+                    box.Visible = false
                 end
             else
                 box.Visible = false
             end
-        else
-            box.Visible = false
         end
-    end)
-end
-
--- Criar ESP para todos os jogadores
-for _, p in pairs(Players:GetPlayers()) do
-    if p ~= LocalPlayer then
-        criarESP(p)
     end
-end
-Players.PlayerAdded:Connect(function(p)
-    if p ~= LocalPlayer then
-        criarESP(p)
+
+    -- 💨 Speed suave (do primeiro código)
+    if SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = VelocidadeDesejada
+    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    end
+
+    -- 🦘 Jump
+    if JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = JumpPowerDesejado
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = 50
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
     end
 end)
 
--- Criar botões com os callbacks
-criarBotao("ESP", 0, function()
-    espAtivo = not espAtivo
-    return espAtivo
-end)
-
-criarBotao("Speed", 1, function()
-    speedAtivo = not speedAtivo
-    if not speedAtivo and LocalPlayer.Character then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
-    end
-    return speedAtivo
-end)
-
-criarBotao("Jump", 2, function()
-    jumpAtivo = not jumpAtivo
-    if not jumpAtivo and LocalPlayer.Character then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = 50
-    end
-    return jumpAtivo
-end)
-
--- Aplicar efeitos continuamente
-RunService.RenderStepped:Connect(function()
-    if speedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = speedValor
-    end
-    if jumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.JumpPower = jumpValor
-    end
-end)
+-- 🟦 Inicializa
+CriarInterface()
