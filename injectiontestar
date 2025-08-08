@@ -1,5 +1,6 @@
--- ESP + Speed + Jump para "Roube Um Brainrot"
--- Autorizado para testes
+-- ✅ ESP + Speed + Jump corrigidos para "Roube Um Brainrot"
+-- ✅ Interface Azul
+-- ✅ Autorizado para testes
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -10,38 +11,47 @@ local VelocidadeDesejada = 50
 local JumpPowerDesejado = 100
 local Drawings = {}
 
--- Atualiza humanoide atual e aplica Speed/Jump
+-- 🧠 Atualiza velocidade/pulo
 local function AplicarModificacoes(humanoid)
+    if not humanoid then return end
+
+    -- Proteção contra sobrescrita de speed
     if SpeedAtivo then
         humanoid.WalkSpeed = VelocidadeDesejada
-        humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-            if SpeedAtivo then
+        task.spawn(function()
+            while SpeedAtivo and humanoid do
                 humanoid.WalkSpeed = VelocidadeDesejada
+                task.wait(0.1)
             end
         end)
     else
         humanoid.WalkSpeed = 16
     end
 
+    -- Proteção contra sobrescrita de jump
     if JumpAtivo then
         humanoid.JumpPower = JumpPowerDesejado
-        humanoid:GetPropertyChangedSignal("JumpPower"):Connect(function()
-            if JumpAtivo then
+        humanoid.UseJumpPower = true
+        task.spawn(function()
+            while JumpAtivo and humanoid do
                 humanoid.JumpPower = JumpPowerDesejado
+                humanoid.UseJumpPower = true
+                task.wait(0.1)
             end
         end)
     else
         humanoid.JumpPower = 50
+        humanoid.UseJumpPower = true
     end
 end
 
--- Quando personagem reaparece
+-- 🧍 Reaplica modificações ao renascer
 LocalPlayer.CharacterAdded:Connect(function(character)
     local humanoid = character:WaitForChild("Humanoid")
     AplicarModificacoes(humanoid)
 end)
 
--- Interface GUI com botões
+-- 🎨 Cria GUI com cor azul
 local function CriarInterface()
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.ResetOnSpawn = false
@@ -50,12 +60,12 @@ local function CriarInterface()
     local frame = Instance.new("Frame", gui)
     frame.Size = UDim2.new(0, 200, 0, 180)
     frame.Position = UDim2.new(0, 10, 0, 10)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50) -- Azul escuro
     frame.BorderSizePixel = 0
 
     local titulo = Instance.new("TextLabel", frame)
     titulo.Size = UDim2.new(1, 0, 0, 30)
-    titulo.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
     titulo.Text = "Painel de Hacks"
     titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
     titulo.TextSize = 18
@@ -65,7 +75,7 @@ local function CriarInterface()
         local botao = Instance.new("TextButton", frame)
         botao.Size = UDim2.new(1, -20, 0, 30)
         botao.Position = UDim2.new(0, 10, 0, posY)
-        botao.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        botao.BackgroundColor3 = Color3.fromRGB(0, 40, 100) -- Azul escuro
         botao.TextColor3 = Color3.new(1, 1, 1)
         botao.Font = Enum.Font.SourceSans
         botao.TextSize = 16
@@ -84,32 +94,28 @@ local function CriarInterface()
         SpeedAtivo = not SpeedAtivo
         btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            AplicarModificacoes(humanoid)
-        end
+        AplicarModificacoes(humanoid)
     end)
 
     CriarBotao("Jump: OFF", 120, function(btn)
         JumpAtivo = not JumpAtivo
         btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            AplicarModificacoes(humanoid)
-        end
+        AplicarModificacoes(humanoid)
     end)
 end
 
--- Cria e gerencia a caixa 2D para cada jogador
+-- 🔲 Cria caixa 2D para cada jogador
 local function CriarCaixa(plr)
     local box = Drawing.new("Square")
     box.Visible = false
     box.Thickness = 2
-    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Color = Color3.fromRGB(0, 255, 255) -- ciano
     box.Filled = false
     Drawings[plr] = box
 end
 
--- Atualiza caixas no RenderStepped
+-- 🔁 Atualiza as caixas no ESP
 RunService.RenderStepped:Connect(function()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
@@ -129,7 +135,6 @@ RunService.RenderStepped:Connect(function()
                 if bottom.Z > 0 then
                     local height = math.abs(top.Y - bottom.Y)
                     local width = height / 2
-
                     box.Size = Vector2.new(width, height)
                     box.Position = Vector2.new(top.X - width / 2, top.Y)
                     box.Visible = true
@@ -143,7 +148,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Início
+-- 🟦 Inicializa
 CriarInterface()
 
 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
