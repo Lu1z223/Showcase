@@ -1,35 +1,56 @@
--- Script ESP, Speed e High Jump — Autorizado para “Roube Um Brainrot”
+-- ESP + Speed + Jump para "Roube Um Brainrot"
+-- Autorizado para testes
 
--- Configurações
-local ESPAtivo = false
-local SpeedAtivo = false
-local JumpAtivo = false
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
 local VelocidadeDesejada = 50
 local JumpPowerDesejado = 100
-local DesenhosESP = {}
+local Drawings = {}
 
-local player = game.Players.LocalPlayer
-local humanoid
+-- Atualiza humanoide atual e aplica Speed/Jump
+local function AplicarModificacoes(humanoid)
+    if SpeedAtivo then
+        humanoid.WalkSpeed = VelocidadeDesejada
+        humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+            if SpeedAtivo then
+                humanoid.WalkSpeed = VelocidadeDesejada
+            end
+        end)
+    else
+        humanoid.WalkSpeed = 16
+    end
 
--- Função para atualizar humanoide
-local function AtualizarHumanoid()
-    humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-    if humanoid then
-        if SpeedAtivo then humanoid.WalkSpeed = VelocidadeDesejada else humanoid.WalkSpeed = 16 end
-        if JumpAtivo then humanoid.JumpPower = JumpPowerDesejado else humanoid.JumpPower = 50 end
+    if JumpAtivo then
+        humanoid.JumpPower = JumpPowerDesejado
+        humanoid:GetPropertyChangedSignal("JumpPower"):Connect(function()
+            if JumpAtivo then
+                humanoid.JumpPower = JumpPowerDesejado
+            end
+        end)
+    else
+        humanoid.JumpPower = 50
     end
 end
 
--- Interface Melhorada (GUI)
+-- Quando personagem reaparece
+LocalPlayer.CharacterAdded:Connect(function(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    AplicarModificacoes(humanoid)
+end)
+
+-- Interface GUI com botões
 local function CriarInterface()
-    local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-    gui.Name = "HackInterface"
+    local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.ResetOnSpawn = false
+    gui.Name = "PainelHack"
 
     local frame = Instance.new("Frame", gui)
     frame.Size = UDim2.new(0, 200, 0, 180)
     frame.Position = UDim2.new(0, 10, 0, 10)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     frame.BorderSizePixel = 0
 
     local titulo = Instance.new("TextLabel", frame)
@@ -40,103 +61,91 @@ local function CriarInterface()
     titulo.TextSize = 18
     titulo.Font = Enum.Font.SourceSansBold
 
-    local botaoESP = Instance.new("TextButton", frame)
-    botaoESP.Size = UDim2.new(1, -20, 0, 30)
-    botaoESP.Position = UDim2.new(0, 10, 0, 40)
-    botaoESP.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    botaoESP.TextColor3 = Color3.fromRGB(255, 255, 255)
-    botaoESP.Text = "ESP: OFF"
-    botaoESP.MouseButton1Click:Connect(function()
+    local function CriarBotao(texto, posY, aoClicar)
+        local botao = Instance.new("TextButton", frame)
+        botao.Size = UDim2.new(1, -20, 0, 30)
+        botao.Position = UDim2.new(0, 10, 0, posY)
+        botao.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        botao.TextColor3 = Color3.new(1, 1, 1)
+        botao.Font = Enum.Font.SourceSans
+        botao.TextSize = 16
+        botao.Text = texto
+        botao.MouseButton1Click:Connect(function()
+            aoClicar(botao)
+        end)
+    end
+
+    CriarBotao("ESP: OFF", 40, function(btn)
         ESPAtivo = not ESPAtivo
-        botaoESP.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
+        btn.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
     end)
 
-    local botaoSpeed = Instance.new("TextButton", frame)
-    botaoSpeed.Size = UDim2.new(1, -20, 0, 30)
-    botaoSpeed.Position = UDim2.new(0, 10, 0, 80)
-    botaoSpeed.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    botaoSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
-    botaoSpeed.Text = "Speed: OFF"
-    botaoSpeed.MouseButton1Click:Connect(function()
+    CriarBotao("Speed: OFF", 80, function(btn)
         SpeedAtivo = not SpeedAtivo
-        botaoSpeed.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
-        AtualizarHumanoid()
+        btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            AplicarModificacoes(humanoid)
+        end
     end)
 
-    local botaoJump = Instance.new("TextButton", frame)
-    botaoJump.Size = UDim2.new(1, -20, 0, 30)
-    botaoJump.Position = UDim2.new(0, 10, 0, 120)
-    botaoJump.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    botaoJump.TextColor3 = Color3.fromRGB(255, 255, 255)
-    botaoJump.Text = "Jump: OFF"
-    botaoJump.MouseButton1Click:Connect(function()
+    CriarBotao("Jump: OFF", 120, function(btn)
         JumpAtivo = not JumpAtivo
-        botaoJump.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
-        AtualizarHumanoid()
-    end)
-
-    local botaoFechar = Instance.new("TextButton", frame)
-    botaoFechar.Size = UDim2.new(1, -20, 0, 30)
-    botaoFechar.Position = UDim2.new(0, 10, 0, 160)
-    botaoFechar.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-    botaoFechar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    botaoFechar.Text = "Fechar Painel"
-    botaoFechar.MouseButton1Click:Connect(function()
-        frame.Visible = false
-    end)
-
-    local reabrir = Instance.new("TextButton", gui)
-    reabrir.Size = UDim2.new(0, 120, 0, 30)
-    reabrir.Position = UDim2.new(0, 10, 1, -40)
-    reabrir.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
-    reabrir.TextColor3 = Color3.fromRGB(255, 255, 255)
-    reabrir.Text = "Abrir Painel"
-    reabrir.MouseButton1Click:Connect(function()
-        frame.Visible = true
-    end)
-end
-
--- Criar ESP para cada jogador
-local function CriarESP(player)
-    if player == player.LocalPlayer then return end
-    if player.Team and player.Team == player.LocalPlayer.Team then return end
-
-    local text = Drawing.new("Text")
-    text.Text = player.Name
-    text.Size = 14
-    text.Center = true
-    text.Outline = true
-    text.Color = Color3.fromRGB(255, 0, 0)
-    text.Visible = false
-    DesenhosESP[player] = text
-end
-
--- Atualizar ESP em cada frame
-local function AtualizarESP()
-    game:GetService("RunService").RenderStepped:Connect(function()
-        for _, pl in pairs(game.Players:GetPlayers()) do
-            if pl ~= player then
-                if not DesenhosESP[pl] then CriarESP(pl) end
-                local esp = DesenhosESP[pl]
-                local hrp = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
-                if ESPAtivo and hrp then
-                    local pos, vis = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
-                    esp.Visible = vis
-                    if vis then esp.Position = Vector2.new(pos.X, pos.Y - 20) end
-                else
-                    esp.Visible = false
-                end
-            end
+        btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            AplicarModificacoes(humanoid)
         end
     end)
 end
 
--- Reaplicar speed e jump quando personagem recarregar
-player.CharacterAdded:Connect(function()
-    AtualizarHumanoid()
+-- Cria e gerencia a caixa 2D para cada jogador
+local function CriarCaixa(plr)
+    local box = Drawing.new("Square")
+    box.Visible = false
+    box.Thickness = 2
+    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Filled = false
+    Drawings[plr] = box
+end
+
+-- Atualiza caixas no RenderStepped
+RunService.RenderStepped:Connect(function()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            if not Drawings[plr] then
+                CriarCaixa(plr)
+            end
+
+            local box = Drawings[plr]
+            local char = plr.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local head = char and char:FindFirstChild("Head")
+
+            if ESPAtivo and hrp and head and (not plr.Team or plr.Team ~= LocalPlayer.Team) then
+                local top = workspace.CurrentCamera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                local bottom = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 2.5, 0))
+
+                if bottom.Z > 0 then
+                    local height = math.abs(top.Y - bottom.Y)
+                    local width = height / 2
+
+                    box.Size = Vector2.new(width, height)
+                    box.Position = Vector2.new(top.X - width / 2, top.Y)
+                    box.Visible = true
+                else
+                    box.Visible = false
+                end
+            else
+                box.Visible = false
+            end
+        end
+    end
 end)
 
--- Inicialização
+-- Início
 CriarInterface()
-AtualizarESP()
-AtualizarHumanoid()
+
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+    AplicarModificacoes(LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
+end
