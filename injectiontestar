@@ -1,47 +1,66 @@
--- ✅ Script ESP + Speed + Jump Alto (Team Check + Status nos Botões)
--- ✅ Jogo: Roube Um Brainrot
--- ⚠️ Apenas para testes autorizados
+-- 🌊 Script ESP + Speed + Jump Alto (Team Check + Interface Azul)
+-- ✅ Jogo: Roube Um Brainrot | Uso autorizado para testes
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Configurações iniciais
+-- Configurações
 local espAtivo = false
 local speedAtivo = false
 local jumpAtivo = false
 local speedValor = 50
 local jumpValor = 100
-local corESP = Color3.fromRGB(255, 0, 0)
+local corESP = Color3.fromRGB(0, 162, 255) -- Azul ESP
 
--- Interface
+-- Criar interface
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "TesteESP"
+ScreenGui.Name = "InterfaceAzul"
 
-local function criarBotao(nome, pos, callback)
-    local btn = Instance.new("TextButton", ScreenGui)
-    btn.Size = UDim2.new(0, 180, 0, 35)
-    btn.Position = pos
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+local frame = Instance.new("Frame", ScreenGui)
+frame.Size = UDim2.new(0, 210, 0, 160)
+frame.Position = UDim2.new(0, 20, 0, 20)
+frame.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
+frame.BorderSizePixel = 0
+
+local UICorner = Instance.new("UICorner", frame)
+UICorner.CornerRadius = UDim.new(0, 8)
+
+local titulo = Instance.new("TextLabel", frame)
+titulo.Size = UDim2.new(1, 0, 0, 30)
+titulo.BackgroundTransparency = 1
+titulo.Text = "🌊 MENU TESTE"
+titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+titulo.Font = Enum.Font.SourceSansBold
+titulo.TextSize = 20
+
+local function criarBotao(nome, ordem, callback)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0, 180, 0, 30)
+    btn.Position = UDim2.new(0, 15, 0, 35 + (ordem * 35))
+    btn.BackgroundColor3 = Color3.fromRGB(0, 122, 204)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 18
+    btn.TextSize = 16
     btn.Text = nome .. ": DESATIVADO"
+    
+    local corner = Instance.new("UICorner", btn)
+    corner.CornerRadius = UDim.new(0, 6)
+    
     btn.MouseButton1Click:Connect(function()
         local status = callback()
         if status then
             btn.Text = nome .. ": ATIVADO"
-            btn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+            btn.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
         else
             btn.Text = nome .. ": DESATIVADO"
-            btn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+            btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
         end
     end)
-    return btn
 end
 
--- FUNÇÃO ESP
+-- Função ESP
 local function criarESP(player)
     local box = Drawing.new("Square")
     box.Thickness = 2
@@ -84,13 +103,13 @@ Players.PlayerAdded:Connect(function(p)
     end
 end)
 
--- BOTÕES
-criarBotao("ESP", UDim2.new(0, 20, 0, 20), function()
+-- Criar botões
+criarBotao("ESP", 0, function()
     espAtivo = not espAtivo
     return espAtivo
 end)
 
-criarBotao("Speed", UDim2.new(0, 20, 0, 60), function()
+criarBotao("Speed", 1, function()
     speedAtivo = not speedAtivo
     if not speedAtivo and LocalPlayer.Character then
         LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
@@ -98,7 +117,7 @@ criarBotao("Speed", UDim2.new(0, 20, 0, 60), function()
     return speedAtivo
 end)
 
-criarBotao("Jump", UDim2.new(0, 20, 0, 100), function()
+criarBotao("Jump", 2, function()
     jumpAtivo = not jumpAtivo
     if not jumpAtivo and LocalPlayer.Character then
         LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = 50
@@ -106,7 +125,7 @@ criarBotao("Jump", UDim2.new(0, 20, 0, 100), function()
     return jumpAtivo
 end)
 
--- Ações constantes
+-- Aplicar efeitos contínuos
 RunService.RenderStepped:Connect(function()
     if speedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = speedValor
