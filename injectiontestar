@@ -1,29 +1,97 @@
--- ESP Script com Interface Simples e Team Check
+-- Script com ESP + Speed e Interface Melhorada
 -- Feito para fins de teste autorizados
 
--- Configuração
+-- Configurações iniciais
 local ESPAtivo = false
+local SpeedAtivo = false
+local VelocidadeDesejada = 50
 local DesenhosESP = {}
+local InterfaceAberta = true
 
--- Interface Simples (GUI)
+-- Criar Interface Completa
 local function CriarInterface()
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "ESP_Interface"
-    screenGui.ResetOnSpawn = false
-    screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    local player = game.Players.LocalPlayer
+    local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+    gui.Name = "Script_Interface"
+    gui.ResetOnSpawn = false
 
-    local botao = Instance.new("TextButton")
-    botao.Name = "BotaoESP"
-    botao.Size = UDim2.new(0, 100, 0, 40)
-    botao.Position = UDim2.new(0, 10, 0, 10)
-    botao.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    botao.TextColor3 = Color3.fromRGB(255, 255, 255)
-    botao.Text = "ESP: OFF"
-    botao.Parent = screenGui
+    -- Janela principal
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 200, 0, 150)
+    frame.Position = UDim2.new(0, 10, 0, 10)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 0
+    frame.Name = "Painel"
+    frame.Parent = gui
 
-    botao.MouseButton1Click:Connect(function()
+    -- Título
+    local titulo = Instance.new("TextLabel")
+    titulo.Size = UDim2.new(1, 0, 0, 30)
+    titulo.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    titulo.Text = "Painel de Hacks"
+    titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titulo.TextSize = 18
+    titulo.Font = Enum.Font.SourceSansBold
+    titulo.Parent = frame
+
+    -- Botão ESP
+    local botaoESP = Instance.new("TextButton")
+    botaoESP.Size = UDim2.new(1, -20, 0, 30)
+    botaoESP.Position = UDim2.new(0, 10, 0, 40)
+    botaoESP.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    botaoESP.TextColor3 = Color3.fromRGB(255, 255, 255)
+    botaoESP.Text = "ESP: OFF"
+    botaoESP.Parent = frame
+
+    botaoESP.MouseButton1Click:Connect(function()
         ESPAtivo = not ESPAtivo
-        botao.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
+        botaoESP.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
+    end)
+
+    -- Botão Speed
+    local botaoSpeed = Instance.new("TextButton")
+    botaoSpeed.Size = UDim2.new(1, -20, 0, 30)
+    botaoSpeed.Position = UDim2.new(0, 10, 0, 80)
+    botaoSpeed.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    botaoSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
+    botaoSpeed.Text = "Speed: OFF"
+    botaoSpeed.Parent = frame
+
+    botaoSpeed.MouseButton1Click:Connect(function()
+        SpeedAtivo = not SpeedAtivo
+        botaoSpeed.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
+        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = SpeedAtivo and VelocidadeDesejada or 16
+        end
+    end)
+
+    -- Botão Fechar Painel
+    local botaoFechar = Instance.new("TextButton")
+    botaoFechar.Size = UDim2.new(1, -20, 0, 30)
+    botaoFechar.Position = UDim2.new(0, 10, 0, 120)
+    botaoFechar.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+    botaoFechar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    botaoFechar.Text = "Fechar Painel"
+    botaoFechar.Parent = frame
+
+    botaoFechar.MouseButton1Click:Connect(function()
+        frame.Visible = false
+        InterfaceAberta = false
+    end)
+
+    -- Botão para reabrir painel
+    local reabrir = Instance.new("TextButton")
+    reabrir.Size = UDim2.new(0, 120, 0, 30)
+    reabrir.Position = UDim2.new(0, 10, 1, -40)
+    reabrir.Text = "Abrir Painel"
+    reabrir.TextColor3 = Color3.fromRGB(255, 255, 255)
+    reabrir.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+    reabrir.Parent = gui
+
+    reabrir.MouseButton1Click:Connect(function()
+        frame.Visible = true
+        InterfaceAberta = true
     end)
 end
 
@@ -32,18 +100,18 @@ local function CriarESP(player)
     if player == game.Players.LocalPlayer then return end
     if player.Team and player.Team == game.Players.LocalPlayer.Team then return end
 
-    local text = Drawing.new("Text")
-    text.Text = player.Name
-    text.Size = 14
-    text.Center = true
-    text.Outline = true
-    text.Color = Color3.fromRGB(255, 0, 0)
-    text.Visible = false
+    local espText = Drawing.new("Text")
+    espText.Text = player.Name
+    espText.Size = 14
+    espText.Center = true
+    espText.Outline = true
+    espText.Color = Color3.fromRGB(255, 0, 0)
+    espText.Visible = false
 
-    DesenhosESP[player] = text
+    DesenhosESP[player] = espText
 end
 
--- Atualizar ESP continuamente
+-- Atualizar ESP
 local function AtualizarESP()
     game:GetService("RunService").RenderStepped:Connect(function()
         for _, player in pairs(game.Players:GetPlayers()) do
@@ -52,28 +120,36 @@ local function AtualizarESP()
                     CriarESP(player)
                 end
 
-                local drawing = DesenhosESP[player]
-                local character = player.Character
-                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                local esp = DesenhosESP[player]
+                local char = player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
 
                 if ESPAtivo and hrp then
-                    local pos, visible = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
-                    if visible then
-                        drawing.Position = Vector2.new(pos.X, pos.Y - 20)
-                        drawing.Text = player.Name
-                        drawing.Visible = true
+                    local pos, vis = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
+                    if vis then
+                        esp.Position = Vector2.new(pos.X, pos.Y - 20)
+                        esp.Visible = true
+                        esp.Text = player.Name
                     else
-                        drawing.Visible = false
+                        esp.Visible = false
                     end
-                elseif drawing then
-                    drawing.Visible = false
+                elseif esp then
+                    esp.Visible = false
                 end
+            end
+        end
+
+        -- Speed manter ativo
+        if SpeedAtivo then
+            local humanoid = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if humanoid and humanoid.WalkSpeed ~= VelocidadeDesejada then
+                humanoid.WalkSpeed = VelocidadeDesejada
             end
         end
     end)
 end
 
--- Limpar ESP ao jogador sair
+-- Remover ESP ao sair
 game.Players.PlayerRemoving:Connect(function(player)
     if DesenhosESP[player] then
         DesenhosESP[player]:Remove()
@@ -81,7 +157,7 @@ game.Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Atualizar ESP quando novos jogadores entrarem
+-- Criar ESP para novos jogadores
 game.Players.PlayerAdded:Connect(function(player)
     CriarESP(player)
 end)
