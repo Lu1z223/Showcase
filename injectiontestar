@@ -8,6 +8,9 @@ local JumpPowerDesejado = 100
 local Drawings = {}
 local FrameMenu -- referencia global do menu para abrir/fechar
 
+-- Variável para guardar posição salva
+local posicaoSalva = nil
+
 -- --- Speed enforcer state
 local speedState = {
     propConn = nil,
@@ -29,11 +32,9 @@ end
 
 local function StartEnforceSpeed(humanoid)
     if not humanoid then return end
-    -- se já tinha um enforcer, desconecta antes
     StopEnforceSpeed()
     speedState.humanoid = humanoid
 
-    -- apenas reaplica quando mudar o WalkSpeed
     speedState.propConn = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if SpeedAtivo and speedState.humanoid and speedState.humanoid.Parent then
             if speedState.humanoid.WalkSpeed ~= VelocidadeDesejada then
@@ -44,7 +45,6 @@ local function StartEnforceSpeed(humanoid)
         end
     end)
 
-    -- quando morrer/disconectar o humanoid, limpa conexões
     speedState.diedConn = humanoid.Died:Connect(function()
         StopEnforceSpeed()
     end)
@@ -80,7 +80,7 @@ local function AplicarModificacoes(humanoid)
     end
 end
 
--- Se o personagem renasceu, reaplica e (se speed ativo) reconecta enforcer
+-- Se o personagem renasceu
 LocalPlayer.CharacterAdded:Connect(function(character)
     local humanoid = character:WaitForChild("Humanoid")
     AplicarModificacoes(humanoid)
@@ -95,7 +95,6 @@ local function CriarInterface()
     gui.ResetOnSpawn = false
     gui.Name = "Injection - Roblox"
 
-    -- Botão para abrir menu no celular
     local botaoAbrir = Instance.new("TextButton", gui)
     botaoAbrir.Size = UDim2.new(0, 100, 0, 40)
     botaoAbrir.Position = UDim2.new(0, 10, 1, -50)
@@ -105,16 +104,14 @@ local function CriarInterface()
     botaoAbrir.TextSize = 16
     botaoAbrir.Font = Enum.Font.SourceSansBold
 
-    -- Frame do menu
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 200, 0, 180)
+    frame.Size = UDim2.new(0, 200, 0, 240) -- aumentei para caber os novos botões
     frame.Position = UDim2.new(0, 10, 0, 10)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
     frame.BorderSizePixel = 0
     frame.Visible = false
     FrameMenu = frame
 
-    -- Título
     local titulo = Instance.new("TextLabel", frame)
     titulo.Size = UDim2.new(1, 0, 0, 30)
     titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
@@ -123,7 +120,6 @@ local function CriarInterface()
     titulo.TextSize = 18
     titulo.Font = Enum.Font.SourceSansBold
 
-    -- Botão de fechar
     local fechar = Instance.new("TextButton", frame)
     fechar.Size = UDim2.new(0, 30, 0, 30)
     fechar.Position = UDim2.new(1, -35, 0, 0)
@@ -136,7 +132,6 @@ local function CriarInterface()
         frame.Visible = false
     end)
 
-    -- Função para criar botões
     local function CriarBotao(texto, posY, aoClicar)
         local botao = Instance.new("TextButton", frame)
         botao.Size = UDim2.new(1, -20, 0, 30)
@@ -170,7 +165,28 @@ local function CriarInterface()
         AplicarModificacoes(humanoid)
     end)
 
-    -- Clique no botão de abrir
+    -- Botão para salvar posição
+    CriarBotao("Salvar Posição", 160, function(btn)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            posicaoSalva = char.HumanoidRootPart.Position
+            btn.Text = "Posição Salva!"
+            task.delay(1.5, function()
+                btn.Text = "Salvar Posição"
+            end)
+        end
+    end)
+
+    -- Botão para voltar para posição salva
+    CriarBotao("Voltar Posição", 200, function()
+        if posicaoSalva then
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                char:MoveTo(posicaoSalva)
+            end
+        end
+    end)
+
     botaoAbrir.MouseButton1Click:Connect(function()
         frame.Visible = not frame.Visible
     end)
