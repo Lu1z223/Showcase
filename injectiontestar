@@ -1,5 +1,5 @@
--- ✅ ESP + Speed (suave) + Jump corrigidos para "Roube Um Brainrot"
--- ✅ Interface Azul
+-- ✅ ESP + Speed (fluido) + Jump corrigidos para "Roube Um Brainrot"
+-- ✅ Interface Azul + Botão Discord
 -- ✅ Autorizado para testes
 
 local Players = game:GetService("Players")
@@ -19,7 +19,7 @@ local function CriarInterface()
     gui.Name = "PainelHack"
 
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 200, 0, 180)
+    frame.Size = UDim2.new(0, 200, 0, 220)
     frame.Position = UDim2.new(0, 10, 0, 10)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
     frame.BorderSizePixel = 0
@@ -53,12 +53,28 @@ local function CriarInterface()
 
     CriarBotao("Speed: OFF", 80, function(btn)
         SpeedAtivo = not SpeedAtivo
+        if not SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
         btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
     end)
 
     CriarBotao("Jump: OFF", 120, function(btn)
         JumpAtivo = not JumpAtivo
+        if not JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
         btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
+    end)
+
+    -- Botão Discord
+    CriarBotao("🌐 Discord", 160, function()
+        setclipboard("https://discord.gg/scriptroblox")
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Discord",
+            Text = "Link copiado para área de transferência!",
+            Duration = 3
+        })
     end)
 end
 
@@ -94,7 +110,7 @@ Players.PlayerRemoving:Connect(function(p)
     end
 end)
 
--- 🔁 Atualiza as caixas no ESP + aplica Speed/Jump suave
+-- 🔁 Atualiza as caixas no ESP + aplica Speed/Jump
 RunService.RenderStepped:Connect(function()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
@@ -125,19 +141,14 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- 💨 Speed suave
+    -- 💨 Speed igual ao primeiro código
     if SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = VelocidadeDesejada
-    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = 16
     end
 
     -- 🦘 Jump
     if JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.JumpPower = JumpPowerDesejado
-        LocalPlayer.Character.Humanoid.UseJumpPower = true
-    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.JumpPower = 50
         LocalPlayer.Character.Humanoid.UseJumpPower = true
     end
 end)
