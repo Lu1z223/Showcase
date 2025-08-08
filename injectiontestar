@@ -3,7 +3,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
-local VelocidadeDesejada = 250
+local VelocidadeDesejada = 100
 local JumpPowerDesejado = 100
 local Drawings = {}
 local FrameMenu -- referencia global do menu para abrir/fechar
