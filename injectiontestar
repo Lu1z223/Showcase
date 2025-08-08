@@ -72,14 +72,37 @@ local function CriarCaixa(plr)
     Drawings[plr] = box
 end
 
--- 🔁 Atualiza as caixas no ESP
+-- 🧍 Cria ESP para todos os jogadores existentes
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then
+        CriarCaixa(p)
+    end
+end
+
+-- 📌 Novo jogador
+Players.PlayerAdded:Connect(function(p)
+    if p ~= LocalPlayer then
+        CriarCaixa(p)
+    end
+end)
+
+-- 🗑 Remove desenho ao sair
+Players.PlayerRemoving:Connect(function(p)
+    if Drawings[p] then
+        Drawings[p]:Remove()
+        Drawings[p] = nil
+    end
+end)
+
+-- 🔁 Atualiza as caixas no ESP + aplica Speed/Jump suave
 RunService.RenderStepped:Connect(function()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            if not Drawings[plr] then
-                CriarCaixa(plr)
-            end
             local box = Drawings[plr]
+            if not box then
+                CriarCaixa(plr)
+                box = Drawings[plr]
+            end
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local head = char and char:FindFirstChild("Head")
@@ -102,7 +125,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- 💨 Speed suave (do primeiro código)
+    -- 💨 Speed suave
     if SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = VelocidadeDesejada
     elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
@@ -116,6 +139,18 @@ RunService.RenderStepped:Connect(function()
     elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.JumpPower = 50
         LocalPlayer.Character.Humanoid.UseJumpPower = true
+    end
+end)
+
+-- 🔄 Reaplica ao renascer
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    if SpeedAtivo then
+        char.Humanoid.WalkSpeed = VelocidadeDesejada
+    end
+    if JumpAtivo then
+        char.Humanoid.JumpPower = JumpPowerDesejado
+        char.Humanoid.UseJumpPower = true
     end
 end)
 
