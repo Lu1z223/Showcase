@@ -6,54 +6,34 @@ local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
 local VelocidadeDesejada = 100
 local JumpPowerDesejado = 100
 local Drawings = {}
-local FrameMenu -- referencia global do menu para abrir/fechar
-
--- Variável para guardar posição salva
+local FrameMenu
 local posicaoSalva = nil
 
--- --- Speed enforcer state
-local speedState = {
-    propConn = nil,
-    diedConn = nil,
-    humanoid = nil
-}
+-- Estado do Speed
+local speedState = { propConn = nil, diedConn = nil, humanoid = nil }
 
 local function StopEnforceSpeed()
-    if speedState.propConn then
-        pcall(function() speedState.propConn:Disconnect() end)
-        speedState.propConn = nil
-    end
-    if speedState.diedConn then
-        pcall(function() speedState.diedConn:Disconnect() end)
-        speedState.diedConn = nil
-    end
-    speedState.humanoid = nil
+    if speedState.propConn then pcall(function() speedState.propConn:Disconnect() end) end
+    if speedState.diedConn then pcall(function() speedState.diedConn:Disconnect() end) end
+    speedState.propConn, speedState.diedConn, speedState.humanoid = nil, nil, nil
 end
 
 local function StartEnforceSpeed(humanoid)
     if not humanoid then return end
     StopEnforceSpeed()
     speedState.humanoid = humanoid
-
     speedState.propConn = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
         if SpeedAtivo and speedState.humanoid and speedState.humanoid.Parent then
             if speedState.humanoid.WalkSpeed ~= VelocidadeDesejada then
-                pcall(function()
-                    speedState.humanoid.WalkSpeed = VelocidadeDesejada
-                end)
+                pcall(function() speedState.humanoid.WalkSpeed = VelocidadeDesejada end)
             end
         end
     end)
-
-    speedState.diedConn = humanoid.Died:Connect(function()
-        StopEnforceSpeed()
-    end)
+    speedState.diedConn = humanoid.Died:Connect(function() StopEnforceSpeed() end)
 end
 
--- 🧠 Atualiza velocidade/pulo
 local function AplicarModificacoes(humanoid)
     if not humanoid then return end
-
     if SpeedAtivo then
         pcall(function() humanoid.WalkSpeed = VelocidadeDesejada end)
         StartEnforceSpeed(humanoid)
@@ -61,7 +41,6 @@ local function AplicarModificacoes(humanoid)
         pcall(function() humanoid.WalkSpeed = 16 end)
         StopEnforceSpeed()
     end
-
     if JumpAtivo then
         humanoid.JumpPower = JumpPowerDesejado
         humanoid.UseJumpPower = true
@@ -80,16 +59,23 @@ local function AplicarModificacoes(humanoid)
     end
 end
 
--- Se o personagem renasceu
 LocalPlayer.CharacterAdded:Connect(function(character)
     local humanoid = character:WaitForChild("Humanoid")
     AplicarModificacoes(humanoid)
-    if SpeedAtivo then
-        StartEnforceSpeed(humanoid)
-    end
+    if SpeedAtivo then StartEnforceSpeed(humanoid) end
 end)
 
--- 🎨 Cria GUI com cor azul
+local function MoverSuavemente(hrp, destino, duracao)
+    local inicio = tick()
+    local origem = hrp.Position
+    local conexao
+    conexao = RunService.Heartbeat:Connect(function()
+        local t = math.min((tick() - inicio) / duracao, 1)
+        hrp.CFrame = CFrame.new(origem:Lerp(destino, t), hrp.CFrame.LookVector + hrp.Position)
+        if t >= 1 then conexao:Disconnect() end
+    end)
+end
+
 local function CriarInterface()
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.ResetOnSpawn = false
@@ -105,7 +91,7 @@ local function CriarInterface()
     botaoAbrir.Font = Enum.Font.SourceSansBold
 
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 200, 0, 240) -- aumentei para caber os novos botões
+    frame.Size = UDim2.new(0, 200, 0, 240)
     frame.Position = UDim2.new(0, 10, 0, 10)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
     frame.BorderSizePixel = 0
@@ -128,9 +114,7 @@ local function CriarInterface()
     fechar.TextColor3 = Color3.new(1, 1, 1)
     fechar.TextSize = 16
     fechar.Font = Enum.Font.SourceSansBold
-    fechar.MouseButton1Click:Connect(function()
-        frame.Visible = false
-    end)
+    fechar.MouseButton1Click:Connect(function() frame.Visible = false end)
 
     local function CriarBotao(texto, posY, aoClicar)
         local botao = Instance.new("TextButton", frame)
@@ -141,58 +125,46 @@ local function CriarInterface()
         botao.Font = Enum.Font.SourceSans
         botao.TextSize = 16
         botao.Text = texto
-        botao.MouseButton1Click:Connect(function()
-            aoClicar(botao)
-        end)
+        botao.MouseButton1Click:Connect(function() aoClicar(botao) end)
     end
 
     CriarBotao("ESP: OFF", 40, function(btn)
         ESPAtivo = not ESPAtivo
         btn.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
     end)
-
     CriarBotao("Speed: OFF", 80, function(btn)
         SpeedAtivo = not SpeedAtivo
         btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         AplicarModificacoes(humanoid)
     end)
-
     CriarBotao("Jump: OFF", 120, function(btn)
         JumpAtivo = not JumpAtivo
         btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         AplicarModificacoes(humanoid)
     end)
-
-    -- Botão para salvar posição
     CriarBotao("Salvar Posição", 160, function(btn)
         local char = LocalPlayer.Character
         if char and char:FindFirstChild("HumanoidRootPart") then
             posicaoSalva = char.HumanoidRootPart.Position
             btn.Text = "Posição Salva!"
-            task.delay(1.5, function()
-                btn.Text = "Salvar Posição"
-            end)
+            task.delay(1.5, function() btn.Text = "Salvar Posição" end)
         end
     end)
-
-    -- Botão para voltar para posição salva
     CriarBotao("Voltar Posição", 200, function()
         if posicaoSalva then
             local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                char:MoveTo(posicaoSalva)
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                MoverSuavemente(hrp, posicaoSalva, 1.5) -- 1.5 segundos de transição
             end
         end
     end)
 
-    botaoAbrir.MouseButton1Click:Connect(function()
-        frame.Visible = not frame.Visible
-    end)
+    botaoAbrir.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
 end
 
--- 🔲 Cria caixa 2D para cada jogador
 local function CriarCaixa(plr)
     local box = Drawing.new("Square")
     box.Visible = false
@@ -205,19 +177,14 @@ end
 RunService.RenderStepped:Connect(function()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            if not Drawings[plr] then
-                CriarCaixa(plr)
-            end
-
+            if not Drawings[plr] then CriarCaixa(plr) end
             local box = Drawings[plr]
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local head = char and char:FindFirstChild("Head")
-
             if ESPAtivo and hrp and head and (not plr.Team or plr.Team ~= LocalPlayer.Team) then
                 local top = workspace.CurrentCamera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
                 local bottom = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 2.5, 0))
-
                 if bottom.Z > 0 then
                     local height = math.abs(top.Y - bottom.Y)
                     local width = height / 2
@@ -234,12 +201,8 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- 🟦 Inicializa
 CriarInterface()
-
 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
     AplicarModificacoes(LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
-    if SpeedAtivo then
-        StartEnforceSpeed(LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
-    end
+    if SpeedAtivo then StartEnforceSpeed(LocalPlayer.Character:FindFirstChildOfClass("Humanoid")) end
 end
