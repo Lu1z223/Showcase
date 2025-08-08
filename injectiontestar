@@ -1,55 +1,45 @@
--- ✅ Script ESP + Speed + Jump Alto (Team Check)
+-- ✅ Script ESP + Speed + Jump Alto (Team Check + Status nos Botões)
 -- ✅ Jogo: Roube Um Brainrot
 -- ⚠️ Apenas para testes autorizados
 
--- Serviços do Roblox
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Configurações
+-- Configurações iniciais
 local espAtivo = false
 local speedAtivo = false
 local jumpAtivo = false
 local speedValor = 50
 local jumpValor = 100
-local corESP = Color3.fromRGB(255, 0, 0) -- Vermelho
+local corESP = Color3.fromRGB(255, 0, 0)
 
--- Interface simples
+-- Interface
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "TesteESP"
 
-local function criarBotao(texto, pos, callback)
+local function criarBotao(nome, pos, callback)
     local btn = Instance.new("TextButton", ScreenGui)
-    btn.Size = UDim2.new(0, 150, 0, 30)
+    btn.Size = UDim2.new(0, 180, 0, 35)
     btn.Position = pos
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
     btn.TextSize = 18
-    btn.Text = texto
-    btn.MouseButton1Click:Connect(callback)
+    btn.Text = nome .. ": DESATIVADO"
+    btn.MouseButton1Click:Connect(function()
+        local status = callback()
+        if status then
+            btn.Text = nome .. ": ATIVADO"
+            btn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        else
+            btn.Text = nome .. ": DESATIVADO"
+            btn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+        end
+    end)
+    return btn
 end
-
--- BOTÕES
-criarBotao("ESP ON/OFF", UDim2.new(0, 20, 0, 20), function()
-    espAtivo = not espAtivo
-end)
-
-criarBotao("Speed ON/OFF", UDim2.new(0, 20, 0, 60), function()
-    speedAtivo = not speedAtivo
-    if not speedAtivo then
-        LocalPlayer.Character.Humanoid.WalkSpeed = 16 -- normal
-    end
-end)
-
-criarBotao("Jump ON/OFF", UDim2.new(0, 20, 0, 100), function()
-    jumpAtivo = not jumpAtivo
-    if not jumpAtivo then
-        LocalPlayer.Character.Humanoid.JumpPower = 50 -- normal
-    end
-end)
 
 -- FUNÇÃO ESP
 local function criarESP(player)
@@ -84,14 +74,39 @@ end
 
 -- Criar ESP para todos os jogadores
 for _, p in pairs(Players:GetPlayers()) do
-    criarESP(p)
+    if p ~= LocalPlayer then
+        criarESP(p)
+    end
 end
-
 Players.PlayerAdded:Connect(function(p)
-    criarESP(p)
+    if p ~= LocalPlayer then
+        criarESP(p)
+    end
 end)
 
--- SPEED E JUMP
+-- BOTÕES
+criarBotao("ESP", UDim2.new(0, 20, 0, 20), function()
+    espAtivo = not espAtivo
+    return espAtivo
+end)
+
+criarBotao("Speed", UDim2.new(0, 20, 0, 60), function()
+    speedAtivo = not speedAtivo
+    if not speedAtivo and LocalPlayer.Character then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = 16
+    end
+    return speedAtivo
+end)
+
+criarBotao("Jump", UDim2.new(0, 20, 0, 100), function()
+    jumpAtivo = not jumpAtivo
+    if not jumpAtivo and LocalPlayer.Character then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid").JumpPower = 50
+    end
+    return jumpAtivo
+end)
+
+-- Ações constantes
 RunService.RenderStepped:Connect(function()
     if speedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = speedValor
