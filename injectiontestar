@@ -1,5 +1,5 @@
 -- ✅ ESP + Speed + Jump corrigidos para "Roube Um Brainrot"
--- ✅ Interface Azul
+-- ✅ Interface Azul + Botão de Fechar + Botão de Abrir no celular
 -- ✅ Autorizado para testes
 
 local Players = game:GetService("Players")
@@ -7,22 +7,21 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
-local VelocidadeDesejada = 150
+local VelocidadeDesejada = 250
 local JumpPowerDesejado = 100
 local Drawings = {}
+local FrameMenu -- referencia global do menu para abrir/fechar
 
 -- 🧠 Atualiza velocidade/pulo
 local function AplicarModificacoes(humanoid)
     if not humanoid then return end
 
-    -- Proteção contra sobrescrita de speed removida do loop antigo
     if SpeedAtivo then
         humanoid.WalkSpeed = VelocidadeDesejada
     else
         humanoid.WalkSpeed = 16
     end
 
-    -- Jump normal (não alterado)
     if JumpAtivo then
         humanoid.JumpPower = JumpPowerDesejado
         humanoid.UseJumpPower = true
@@ -39,7 +38,6 @@ local function AplicarModificacoes(humanoid)
     end
 end
 
--- Mantém o speed sempre forçado
 RunService.Heartbeat:Connect(function()
     if SpeedAtivo then
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -49,7 +47,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 🧍 Reaplica modificações ao renascer
 LocalPlayer.CharacterAdded:Connect(function(character)
     local humanoid = character:WaitForChild("Humanoid")
     AplicarModificacoes(humanoid)
@@ -61,12 +58,26 @@ local function CriarInterface()
     gui.ResetOnSpawn = false
     gui.Name = "Injection - Roblox"
 
+    -- Botão para abrir menu no celular
+    local botaoAbrir = Instance.new("TextButton", gui)
+    botaoAbrir.Size = UDim2.new(0, 100, 0, 40)
+    botaoAbrir.Position = UDim2.new(0, 10, 1, -50)
+    botaoAbrir.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+    botaoAbrir.Text = "Abrir Menu"
+    botaoAbrir.TextColor3 = Color3.fromRGB(255, 255, 255)
+    botaoAbrir.TextSize = 16
+    botaoAbrir.Font = Enum.Font.SourceSansBold
+
+    -- Frame do menu
     local frame = Instance.new("Frame", gui)
     frame.Size = UDim2.new(0, 200, 0, 180)
     frame.Position = UDim2.new(0, 10, 0, 10)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50) -- Azul escuro
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
     frame.BorderSizePixel = 0
+    frame.Visible = false
+    FrameMenu = frame
 
+    -- Título
     local titulo = Instance.new("TextLabel", frame)
     titulo.Size = UDim2.new(1, 0, 0, 30)
     titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
@@ -75,11 +86,25 @@ local function CriarInterface()
     titulo.TextSize = 18
     titulo.Font = Enum.Font.SourceSansBold
 
+    -- Botão de fechar
+    local fechar = Instance.new("TextButton", frame)
+    fechar.Size = UDim2.new(0, 30, 0, 30)
+    fechar.Position = UDim2.new(1, -35, 0, 0)
+    fechar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    fechar.Text = "X"
+    fechar.TextColor3 = Color3.new(1, 1, 1)
+    fechar.TextSize = 16
+    fechar.Font = Enum.Font.SourceSansBold
+    fechar.MouseButton1Click:Connect(function()
+        frame.Visible = false
+    end)
+
+    -- Função para criar botões
     local function CriarBotao(texto, posY, aoClicar)
         local botao = Instance.new("TextButton", frame)
         botao.Size = UDim2.new(1, -20, 0, 30)
         botao.Position = UDim2.new(0, 10, 0, posY)
-        botao.BackgroundColor3 = Color3.fromRGB(0, 40, 100) -- Azul escuro
+        botao.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
         botao.TextColor3 = Color3.new(1, 1, 1)
         botao.Font = Enum.Font.SourceSans
         botao.TextSize = 16
@@ -107,6 +132,11 @@ local function CriarInterface()
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         AplicarModificacoes(humanoid)
     end)
+
+    -- Clique no botão de abrir
+    botaoAbrir.MouseButton1Click:Connect(function()
+        frame.Visible = not frame.Visible
+    end)
 end
 
 -- 🔲 Cria caixa 2D para cada jogador
@@ -114,12 +144,11 @@ local function CriarCaixa(plr)
     local box = Drawing.new("Square")
     box.Visible = false
     box.Thickness = 2
-    box.Color = Color3.fromRGB(0, 255, 255) -- ciano
+    box.Color = Color3.fromRGB(0, 255, 255)
     box.Filled = false
     Drawings[plr] = box
 end
 
--- 🔁 Atualiza as caixas no ESP
 RunService.RenderStepped:Connect(function()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
