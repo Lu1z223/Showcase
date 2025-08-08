@@ -1,6 +1,7 @@
 -- ✅ ESP + Speed + Jump corrigidos para "Roube Um Brainrot"
 -- ✅ Interface Azul + Botão de Fechar + Botão de Abrir no celular
 -- ✅ Autorizado para testes
+-- ✅ Fix: enforcement robusto do Speed (RenderStepped + PropertyChanged)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -12,23 +13,80 @@ local JumpPowerDesejado = 100
 local Drawings = {}
 local FrameMenu -- referencia global do menu para abrir/fechar
 
--- 🧠 Atualiza velocidade/pulo
+-- --- Speed enforcer state
+local speedState = {
+    renderConn = nil,
+    propConn = nil,
+    diedConn = nil,
+    humanoid = nil
+}
+
+local function StopEnforceSpeed()
+    if speedState.renderConn then
+        pcall(function() speedState.renderConn:Disconnect() end)
+        speedState.renderConn = nil
+    end
+    if speedState.propConn then
+        pcall(function() speedState.propConn:Disconnect() end)
+        speedState.propConn = nil
+    end
+    if speedState.diedConn then
+        pcall(function() speedState.diedConn:Disconnect() end)
+        speedState.diedConn = nil
+    end
+    speedState.humanoid = nil
+end
+
+local function StartEnforceSpeed(humanoid)
+    if not humanoid then return end
+    -- se já tinha um enforcer, desconecta antes
+    StopEnforceSpeed()
+    speedState.humanoid = humanoid
+
+    -- reaplica todo frame (RenderStepped é bom no cliente)
+    speedState.renderConn = RunService.RenderStepped:Connect(function()
+        if SpeedAtivo and speedState.humanoid and speedState.humanoid.Parent then
+            pcall(function() speedState.humanoid.WalkSpeed = VelocidadeDesejada end)
+        end
+    end)
+
+    -- quando outra coisa mudar WalkSpeed, reaplica
+    speedState.propConn = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+        if SpeedAtivo and speedState.humanoid and speedState.humanoid.Parent then
+            pcall(function() speedState.humanoid.WalkSpeed = VelocidadeDesejada end)
+        end
+    end)
+
+    -- quando morrer/disconectar o humanoid, limpa conexões
+    speedState.diedConn = humanoid.Died:Connect(function()
+        StopEnforceSpeed()
+    end)
+end
+
+-- 🧠 Atualiza velocidade/pulo (mantive como estava)
 local function AplicarModificacoes(humanoid)
     if not humanoid then return end
 
     if SpeedAtivo then
-        humanoid.WalkSpeed = VelocidadeDesejada
+        -- aplica rápido
+        pcall(function() humanoid.WalkSpeed = VelocidadeDesejada end)
+        -- inicia/atualiza enforcer
+        StartEnforceSpeed(humanoid)
     else
-        humanoid.WalkSpeed = 16
+        pcall(function() humanoid.WalkSpeed = 16 end)
+        -- para qualquer enforcer existente
+        StopEnforceSpeed()
     end
 
     if JumpAtivo then
         humanoid.JumpPower = JumpPowerDesejado
         humanoid.UseJumpPower = true
         task.spawn(function()
-            while JumpAtivo and humanoid do
-                humanoid.JumpPower = JumpPowerDesejado
-                humanoid.UseJumpPower = true
+            while JumpAtivo and humanoid and humanoid.Parent do
+                pcall(function()
+                    humanoid.JumpPower = JumpPowerDesejado
+                    humanoid.UseJumpPower = true
+                end)
                 task.wait(0.1)
             end
         end)
@@ -38,18 +96,13 @@ local function AplicarModificacoes(humanoid)
     end
 end
 
-RunService.Heartbeat:Connect(function()
-    if SpeedAtivo then
-        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = VelocidadeDesejada
-        end
-    end
-end)
-
+-- Se o personagem renasceu, reaplica e (se speed ativo) reconecta enforcer
 LocalPlayer.CharacterAdded:Connect(function(character)
     local humanoid = character:WaitForChild("Humanoid")
     AplicarModificacoes(humanoid)
+    if SpeedAtivo then
+        StartEnforceSpeed(humanoid)
+    end
 end)
 
 -- 🎨 Cria GUI com cor azul
@@ -124,6 +177,7 @@ local function CriarInterface()
         btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         AplicarModificacoes(humanoid)
+        -- Start/Stop do enforcer já é chamado dentro de AplicarModificacoes
     end)
 
     CriarBotao("Jump: OFF", 120, function(btn)
@@ -186,4 +240,7 @@ CriarInterface()
 
 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
     AplicarModificacoes(LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
+    if SpeedAtivo then
+        StartEnforceSpeed(LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
+    end
 end
