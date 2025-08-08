@@ -3,7 +3,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
-local VelocidadeDesejada = 30 -- ✅ Velocidade segura (~30 studs/s)
+local VelocidadeDesejada = 30 -- velocidade segura (~30 studs/s)
 local JumpPowerDesejado = 100
 local Drawings = {}
 local FrameMenu
@@ -18,19 +18,19 @@ local function StopEnforceSpeed()
     speedState.speedConn, speedState.diedConn = nil, nil
 end
 
--- Movimento Speed via Heartbeat (seguro e suave)
+-- Speed seguro usando física
 local function StartEnforceSpeed(humanoid)
     StopEnforceSpeed()
     local char = LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    speedState.speedConn = RunService.Heartbeat:Connect(function(deltaTime)
-        if SpeedAtivo and hrp and hrp.Parent and humanoid and humanoid.Parent then
+    speedState.speedConn = RunService.Heartbeat:Connect(function()
+        if SpeedAtivo and humanoid and humanoid.Parent and hrp and hrp.Parent then
             local moveDir = humanoid.MoveDirection
             if moveDir.Magnitude > 0 then
-                local safeSpeed = VelocidadeDesejada * deltaTime -- ~30 studs/s
-                hrp.CFrame = hrp.CFrame + (moveDir * safeSpeed)
+                -- Usa física para alterar velocidade
+                hrp.AssemblyLinearVelocity = Vector3.new(moveDir.X * VelocidadeDesejada, hrp.AssemblyLinearVelocity.Y, moveDir.Z * VelocidadeDesejada)
             end
         end
     end)
@@ -70,10 +70,13 @@ LocalPlayer.CharacterAdded:Connect(function(character)
     if SpeedAtivo then StartEnforceSpeed(humanoid) end
 end)
 
--- Voo rápido até posição salva (suave e seguro)
+-- Voltar Posição com giro e passos seguros
 local function VoarParaPosicao(hrp, destino)
+    local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
     local conexao
-    conexao = RunService.Heartbeat:Connect(function(deltaTime)
+    conexao = RunService.Heartbeat:Connect(function()
         if not hrp or not hrp.Parent then 
             conexao:Disconnect()
             return 
@@ -83,12 +86,13 @@ local function VoarParaPosicao(hrp, destino)
         local dist = diff.Magnitude
 
         if dist < 1 then
-            hrp.CFrame = CFrame.new(destino, destino + hrp.CFrame.LookVector)
             conexao:Disconnect()
         else
-            local stepSize = math.min(dist, 10 * deltaTime) -- ~10 studs/s
-            local step = diff.Unit * stepSize
-            hrp.CFrame = hrp.CFrame + step
+            -- Gira suavemente para o destino
+            local lookAt = CFrame.lookAt(hrp.Position, destino)
+            hrp.CFrame = hrp.CFrame:Lerp(lookAt, 0.2) -- suaviza rotação
+            -- Move em pequenos passos usando MoveTo (não mata)
+            humanoid:MoveTo(hrp.Position + diff.Unit * 2)
         end
     end)
 end
