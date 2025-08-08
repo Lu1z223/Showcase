@@ -6,47 +6,54 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Configurações
+-- Configurações iniciais
 local espAtivo = false
 local speedAtivo = false
 local jumpAtivo = false
 local speedValor = 50
 local jumpValor = 100
-local corESP = Color3.fromRGB(0, 162, 255) -- Azul ESP
+local corESP = Color3.fromRGB(0, 162, 255) -- Azul do ESP
 
--- Criar interface
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+-- Criar interface azul
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "InterfaceAzul"
+ScreenGui.Parent = game.CoreGui
 
-local frame = Instance.new("Frame", ScreenGui)
+local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 210, 0, 160)
 frame.Position = UDim2.new(0, 20, 0, 20)
 frame.BackgroundColor3 = Color3.fromRGB(0, 85, 170)
 frame.BorderSizePixel = 0
+frame.Parent = ScreenGui
 
-local UICorner = Instance.new("UICorner", frame)
+local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = frame
 
-local titulo = Instance.new("TextLabel", frame)
+local titulo = Instance.new("TextLabel")
 titulo.Size = UDim2.new(1, 0, 0, 30)
 titulo.BackgroundTransparency = 1
 titulo.Text = "🌊 MENU TESTE"
 titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
 titulo.Font = Enum.Font.SourceSansBold
 titulo.TextSize = 20
+titulo.Parent = frame
 
+-- Função para criar botões
 local function criarBotao(nome, ordem, callback)
-    local btn = Instance.new("TextButton", frame)
+    local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 180, 0, 30)
     btn.Position = UDim2.new(0, 15, 0, 35 + (ordem * 35))
-    btn.BackgroundColor3 = Color3.fromRGB(0, 122, 204)
+    btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- começa vermelho (desativado)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.SourceSansBold
     btn.TextSize = 16
     btn.Text = nome .. ": DESATIVADO"
+    btn.Parent = frame
     
-    local corner = Instance.new("UICorner", btn)
+    local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
         local status = callback()
@@ -68,7 +75,12 @@ local function criarESP(player)
     box.Filled = false
 
     RunService.RenderStepped:Connect(function()
-        if espAtivo and player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Team ~= LocalPlayer.Team then
+        if espAtivo 
+        and player ~= LocalPlayer 
+        and player.Character 
+        and player.Character:FindFirstChild("HumanoidRootPart") 
+        and player.Team ~= LocalPlayer.Team then
+            
             local pos, vis = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
             if vis then
                 local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
@@ -103,7 +115,7 @@ Players.PlayerAdded:Connect(function(p)
     end
 end)
 
--- Criar botões
+-- Criar botões com os callbacks
 criarBotao("ESP", 0, function()
     espAtivo = not espAtivo
     return espAtivo
@@ -125,7 +137,7 @@ criarBotao("Jump", 2, function()
     return jumpAtivo
 end)
 
--- Aplicar efeitos contínuos
+-- Aplicar efeitos continuamente
 RunService.RenderStepped:Connect(function()
     if speedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = speedValor
