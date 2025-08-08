@@ -27,61 +27,63 @@ local function CriarInterface()
     end)
 end
 
--- Função para criar ESP
+-- Criar ESP para um jogador
 local function CriarESP(player)
     if player == game.Players.LocalPlayer then return end
-    if player.Team == game.Players.LocalPlayer.Team then return end -- Team Check
+    if player.Team and player.Team == game.Players.LocalPlayer.Team then return end
 
-    local box = Drawing.new("Text")
-    box.Text = player.Name
-    box.Size = 14
-    box.Center = true
-    box.Outline = true
-    box.Color = Color3.fromRGB(255, 0, 0)
+    local text = Drawing.new("Text")
+    text.Text = player.Name
+    text.Size = 14
+    text.Center = true
+    text.Outline = true
+    text.Color = Color3.fromRGB(255, 0, 0)
+    text.Visible = false
 
-    DesenhosESP[player] = box
+    DesenhosESP[player] = text
 end
 
--- Atualizar ESP
+-- Atualizar ESP continuamente
 local function AtualizarESP()
     game:GetService("RunService").RenderStepped:Connect(function()
-        if not ESPAtivo then
-            for _, drawing in pairs(DesenhosESP) do
-                drawing.Visible = false
-            end
-            return
-        end
-
         for _, player in pairs(game.Players:GetPlayers()) do
-            local drawing = DesenhosESP[player]
-            if not drawing then
-                CriarESP(player)
-                drawing = DesenhosESP[player]
-            end
+            if player ~= game.Players.LocalPlayer then
+                if not DesenhosESP[player] then
+                    CriarESP(player)
+                end
 
-            local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local pos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
-                if onScreen then
-                    drawing.Position = Vector2.new(pos.X, pos.Y - 20)
-                    drawing.Visible = true
-                else
+                local drawing = DesenhosESP[player]
+                local character = player.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+
+                if ESPAtivo and hrp then
+                    local pos, visible = workspace.CurrentCamera:WorldToViewportPoint(hrp.Position)
+                    if visible then
+                        drawing.Position = Vector2.new(pos.X, pos.Y - 20)
+                        drawing.Text = player.Name
+                        drawing.Visible = true
+                    else
+                        drawing.Visible = false
+                    end
+                elseif drawing then
                     drawing.Visible = false
                 end
-            else
-                drawing.Visible = false
             end
         end
     end)
 end
 
--- Remover ESP ao sair
+-- Limpar ESP ao jogador sair
 game.Players.PlayerRemoving:Connect(function(player)
     if DesenhosESP[player] then
         DesenhosESP[player]:Remove()
         DesenhosESP[player] = nil
     end
+end)
+
+-- Atualizar ESP quando novos jogadores entrarem
+game.Players.PlayerAdded:Connect(function(player)
+    CriarESP(player)
 end)
 
 -- Inicializar
