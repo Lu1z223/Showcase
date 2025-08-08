@@ -7,7 +7,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
-local VelocidadeDesejada = 50
+local VelocidadeDesejada = 100
 local JumpPowerDesejado = 100
 local Drawings = {}
 
