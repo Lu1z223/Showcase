@@ -10,35 +10,39 @@ local FrameMenu
 local posicaoSalva = nil
 
 -- Estado do Speed
-local speedState = { propConn = nil, diedConn = nil, humanoid = nil }
+local speedState = { speedConn = nil, diedConn = nil }
 
 local function StopEnforceSpeed()
-    if speedState.propConn then pcall(function() speedState.propConn:Disconnect() end) end
+    if speedState.speedConn then pcall(function() speedState.speedConn:Disconnect() end) end
     if speedState.diedConn then pcall(function() speedState.diedConn:Disconnect() end) end
-    speedState.propConn, speedState.diedConn, speedState.humanoid = nil, nil, nil
+    speedState.speedConn, speedState.diedConn = nil, nil
 end
 
+-- Movimento Speed via Heartbeat (evita voltar para trás)
 local function StartEnforceSpeed(humanoid)
-    if not humanoid then return end
     StopEnforceSpeed()
-    speedState.humanoid = humanoid
-    speedState.propConn = humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if SpeedAtivo and speedState.humanoid and speedState.humanoid.Parent then
-            if speedState.humanoid.WalkSpeed ~= VelocidadeDesejada then
-                pcall(function() speedState.humanoid.WalkSpeed = VelocidadeDesejada end)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    speedState.speedConn = RunService.Heartbeat:Connect(function()
+        if SpeedAtivo and hrp and hrp.Parent and humanoid and humanoid.Parent then
+            local moveDir = humanoid.MoveDirection
+            if moveDir.Magnitude > 0 then
+                hrp.CFrame = hrp.CFrame + (moveDir * (VelocidadeDesejada / 60))
             end
         end
     end)
+
     speedState.diedConn = humanoid.Died:Connect(function() StopEnforceSpeed() end)
 end
 
+-- Aplicar modificações de Speed e Jump
 local function AplicarModificacoes(humanoid)
     if not humanoid then return end
     if SpeedAtivo then
-        pcall(function() humanoid.WalkSpeed = VelocidadeDesejada end)
         StartEnforceSpeed(humanoid)
     else
-        pcall(function() humanoid.WalkSpeed = 16 end)
         StopEnforceSpeed()
     end
     if JumpAtivo then
@@ -65,17 +69,23 @@ LocalPlayer.CharacterAdded:Connect(function(character)
     if SpeedAtivo then StartEnforceSpeed(humanoid) end
 end)
 
-local function MoverSuavemente(hrp, destino, duracao)
-    local inicio = tick()
-    local origem = hrp.Position
+-- Voo rápido até posição salva
+local function VoarParaPosicao(hrp, destino)
     local conexao
     conexao = RunService.Heartbeat:Connect(function()
-        local t = math.min((tick() - inicio) / duracao, 1)
-        hrp.CFrame = CFrame.new(origem:Lerp(destino, t), hrp.CFrame.LookVector + hrp.Position)
-        if t >= 1 then conexao:Disconnect() end
+        if not hrp or not hrp.Parent then conexao:Disconnect() return end
+        local diff = destino - hrp.Position
+        if diff.Magnitude < 1 then
+            hrp.CFrame = CFrame.new(destino, destino + hrp.CFrame.LookVector)
+            conexao:Disconnect()
+        else
+            local step = diff.Unit * math.min(diff.Magnitude, 5) -- ~300 studs/s
+            hrp.CFrame = hrp.CFrame + step
+        end
     end)
 end
 
+-- Interface
 local function CriarInterface()
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.ResetOnSpawn = false
@@ -157,7 +167,7 @@ local function CriarInterface()
             local char = LocalPlayer.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             if hrp then
-                MoverSuavemente(hrp, posicaoSalva, 1.5) -- 1.5 segundos de transição
+                VoarParaPosicao(hrp, posicaoSalva)
             end
         end
     end)
@@ -165,6 +175,7 @@ local function CriarInterface()
     botaoAbrir.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
 end
 
+-- ESP
 local function CriarCaixa(plr)
     local box = Drawing.new("Square")
     box.Visible = false
@@ -201,6 +212,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- Inicialização
 CriarInterface()
 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
     AplicarModificacoes(LocalPlayer.Character:FindFirstChildOfClass("Humanoid"))
