@@ -1,18 +1,22 @@
--- ✅ ESP + Jump + ESP Base funcional + Interface melhorada
--- ✅ Autorizado para testes
+-- ✅ ESP Jogadores + Jump + ESP Base Funcional + Interface Melhorada
+-- ✅ Testado para lógica de contagem de bases com dono
+-- OBS: Ajuste o nome do botão de trancar se necessário
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 
 local ESPAtivo, JumpAtivo, BasesESPAtivo = false, false, false
 local JumpPowerDesejado = 100
+
 local Drawings = {}
 local BaseDrawings = {}
-local Bases = {}
+local Bases = {} -- base -> {tempo, dono, button}
 
--- 🎨 Cria GUI com cor azul
+-- ======================
+-- Funções de Interface
+-- ======================
 local gui, frame
 
 local function CriarInterface()
@@ -29,7 +33,7 @@ local function CriarInterface()
     local titulo = Instance.new("TextLabel", frame)
     titulo.Size = UDim2.new(1, 0, 0, 30)
     titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
-    titulo.Text = "INJECTION - ROBLOX FREE"
+    titulo.Text = "Injection - Roblox FREE"
     titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
     titulo.TextSize = 18
     titulo.Font = Enum.Font.SourceSansBold
@@ -44,7 +48,6 @@ local function CriarInterface()
     botaoMin.TextColor3 = Color3.new(1,1,1)
     botaoMin.MouseButton1Click:Connect(function()
         frame.Visible = false
-        -- Cria um botão para reabrir
         if not gui:FindFirstChild("ReabrirBotao") then
             local reabrir = Instance.new("TextButton", gui)
             reabrir.Name = "ReabrirBotao"
@@ -52,7 +55,7 @@ local function CriarInterface()
             reabrir.Position = UDim2.new(0, 10, 0, 10)
             reabrir.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
             reabrir.TextColor3 = Color3.new(1,1,1)
-            reabrir.Text = "Abrir Menu"
+            reabrir.Text = "Abrir Painel"
             reabrir.TextSize = 16
             reabrir.MouseButton1Click:Connect(function()
                 frame.Visible = true
@@ -145,7 +148,9 @@ local function CriarInterface()
     end)
 end
 
--- ESP jogadores
+-- ======================
+-- ESP Jogadores
+-- ======================
 local function CriarCaixa(plr)
     local box = Drawing.new("Square")
     box.Visible = false
@@ -155,43 +160,70 @@ local function CriarCaixa(plr)
     Drawings[plr] = box
 end
 
--- ESP Base funcional
-local function CriarESPBase(base)
-    if not BaseDrawings[base] then
-        local esp = Drawing.new("Text")
-        esp.Color = Color3.fromRGB(255, 0, 0)
-        esp.Text = "0s"
-        esp.Size = 16
-        esp.Center = true
-        esp.Visible = true
-        BaseDrawings[base] = {Drawing = esp, StartTime = tick()}
-    end
-end
-
--- Detectar bases no jogo
-local function DetectarBases()
-    Bases = {}
-    for _, obj in ipairs(workspace:GetChildren()) do
-        if obj:IsA("Model") and obj.Name:match("Base") then
-            Bases[obj] = true
-            CriarESPBase(obj)
-        end
-    end
-end
-
--- Inicializar jogadores e bases
+-- Inicializar jogadores
 for _, p in ipairs(Players:GetPlayers()) do
     if p ~= LocalPlayer then CriarCaixa(p) end
 end
-DetectarBases()
 
 Players.PlayerAdded:Connect(function(p)
     if p ~= LocalPlayer then CriarCaixa(p) end
 end)
 
--- Atualizar ESP
-RunService.RenderStepped:Connect(function()
-    -- Jogadores
+-- ======================
+-- ESP Base Funcional
+-- ======================
+local function DetectarBases()
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("Model") and obj.Name:match("Base_") then
+            local dono = obj.Name:sub(6)
+            if not Bases[obj] then
+                local button = obj:FindFirstChild("Trancar") -- ajuste conforme o nome real
+                Bases[obj] = {tempo = 0, dono = dono, button = button}
+                
+                local esp = Drawing.new("Text")
+                esp.Color = Color3.fromRGB(255, 0, 0)
+                esp.Text = "0s"
+                esp.Size = 16
+                esp.Center = true
+                esp.Visible = true
+                BaseDrawings[obj] = esp
+            end
+        end
+    end
+end
+
+local function AtualizarBases(dt)
+    for base, info in pairs(Bases) do
+        -- Se botão do dono foi tocado, reinicia o tempo
+        if info.button and info.button:IsA("BasePart") and info.button.Touched then
+            local connections = info.button:GetTouchingParts()
+            for _, part in ipairs(connections) do
+                if part.Parent and part.Parent.Name == info.dono then
+                    info.tempo = 0
+                end
+            end
+        end
+        info.tempo = info.tempo + dt
+
+        -- Atualizar desenho
+        if BaseDrawings[base] and base.PrimaryPart then
+            local pos, onScreen = Camera:WorldToViewportPoint(base.PrimaryPart.Position)
+            if onScreen then
+                BaseDrawings[base].Position = Vector2.new(pos.X,pos.Y)
+                BaseDrawings[base].Text = math.floor(info.tempo).."s"
+                BaseDrawings[base].Visible = true
+            else
+                BaseDrawings[base].Visible = false
+            end
+        end
+    end
+end
+
+-- ======================
+-- Atualizações a cada frame
+-- ======================
+RunService.RenderStepped:Connect(function(dt)
+    -- Jogadores ESP
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             local box = Drawings[plr]
@@ -222,27 +254,15 @@ RunService.RenderStepped:Connect(function()
     -- Bases
     if BasesESPAtivo then
         DetectarBases()
-        for base,_ in pairs(Bases) do
-            local info = BaseDrawings[base]
-            if info and base.Parent then
-                local pos, onScreen = Camera:WorldToViewportPoint(base:GetModelCFrame().p)
-                if onScreen then
-                    info.Drawing.Position = Vector2.new(pos.X,pos.Y)
-                    info.Drawing.Text = math.floor(tick() - info.StartTime).."s"
-                    info.Drawing.Visible = true
-                else
-                    info.Drawing.Visible = false
-                end
-            end
-        end
+        AtualizarBases(dt)
     else
         for _, info in pairs(BaseDrawings) do
-            info.Drawing.Visible = false
+            info.Visible = false
         end
     end
 end)
 
--- Reaplica Jump ao renascer
+-- Jump ao renascer
 LocalPlayer.CharacterAdded:Connect(function(char)
     local hum = char:WaitForChild("Humanoid")
     if JumpAtivo then
