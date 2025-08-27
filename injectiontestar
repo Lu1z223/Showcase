@@ -183,7 +183,7 @@ local function DetectarBases()
                 local esp = Drawing.new("Text")
                 esp.Color = Color3.fromRGB(255, 0, 0)
                 esp.Text = "0s"
-                esp.Size = 16
+                esp.Size = 32
                 esp.Center = true
                 esp.Visible = true
                 BaseDrawings[obj] = esp
@@ -210,7 +210,7 @@ local function AtualizarBases(dt)
             local pos, onScreen = Camera:WorldToViewportPoint(base.PrimaryPart.Position)
             if onScreen then
                 BaseDrawings[base].Position = Vector2.new(pos.X,pos.Y)
-                BaseDrawings[base].Text = math.floor(info.tempo).."s"
+                BaseDrawings[base].Text = tostring(math.floor(info.tempo *)) .. "s"
                 BaseDrawings[base].Visible = true
             else
                 BaseDrawings[base].Visible = false
