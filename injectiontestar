@@ -1,4 +1,4 @@
--- ✅ ESP + Speed (fluido) + Jump corrigidos para "Roube Um Brainrot"
+-- ✅ ESP + Jump (com regulagem) corrigidos para "Roube Um Brainrot"
 -- ✅ Interface Azul + Botão Discord
 -- ✅ Autorizado para testes
 
@@ -7,8 +7,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local ESPAtivo, SpeedAtivo, JumpAtivo = false, false, false
-local VelocidadeDesejada = 50
+local ESPAtivo, JumpAtivo = false, false
 local JumpPowerDesejado = 100
 local Drawings = {}
 
@@ -19,7 +18,7 @@ local function CriarInterface()
     gui.Name = "PainelHack"
 
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 200, 0, 220)
+    frame.Size = UDim2.new(0, 220, 0, 240)
     frame.Position = UDim2.new(0, 10, 0, 10)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
     frame.BorderSizePixel = 0
@@ -27,7 +26,7 @@ local function CriarInterface()
     local titulo = Instance.new("TextLabel", frame)
     titulo.Size = UDim2.new(1, 0, 0, 30)
     titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
-    titulo.Text = "INJECTION - ROBLOX FREE"
+    titulo.Text = "Injectin - Roblox Free"
     titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
     titulo.TextSize = 18
     titulo.Font = Enum.Font.SourceSansBold
@@ -44,6 +43,7 @@ local function CriarInterface()
         botao.MouseButton1Click:Connect(function()
             aoClicar(botao)
         end)
+        return botao
     end
 
     CriarBotao("ESP: OFF", 40, function(btn)
@@ -51,15 +51,7 @@ local function CriarInterface()
         btn.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
     end)
 
-    CriarBotao("Speed: OFF", 80, function(btn)
-        SpeedAtivo = not SpeedAtivo
-        if not SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        end
-        btn.Text = SpeedAtivo and "Speed: ON" or "Speed: OFF"
-    end)
-
-    CriarBotao("Jump: OFF", 120, function(btn)
+    CriarBotao("Jump: OFF", 80, function(btn)
         JumpAtivo = not JumpAtivo
         if not JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
             LocalPlayer.Character.Humanoid.JumpPower = 50
@@ -67,8 +59,39 @@ local function CriarInterface()
         btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
     end)
 
+    -- Caixa de regulagem do Jump
+    local sliderLabel = Instance.new("TextLabel", frame)
+    sliderLabel.Size = UDim2.new(1, -20, 0, 20)
+    sliderLabel.Position = UDim2.new(0, 10, 0, 120)
+    sliderLabel.BackgroundTransparency = 1
+    sliderLabel.TextColor3 = Color3.new(1, 1, 1)
+    sliderLabel.Font = Enum.Font.SourceSans
+    sliderLabel.TextSize = 16
+    sliderLabel.Text = "Jump: " .. JumpPowerDesejado
+
+    local caixa = Instance.new("TextBox", frame)
+    caixa.Size = UDim2.new(1, -20, 0, 30)
+    caixa.Position = UDim2.new(0, 10, 0, 145)
+    caixa.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
+    caixa.TextColor3 = Color3.new(1, 1, 1)
+    caixa.Font = Enum.Font.SourceSans
+    caixa.TextSize = 16
+    caixa.Text = tostring(JumpPowerDesejado)
+
+    caixa.FocusLost:Connect(function(enter)
+        if enter then
+            local valor = tonumber(caixa.Text)
+            if valor and valor > 0 then
+                JumpPowerDesejado = valor
+                sliderLabel.Text = "Jump: " .. JumpPowerDesejado
+            else
+                caixa.Text = tostring(JumpPowerDesejado)
+            end
+        end
+    end)
+
     -- Botão Discord
-    CriarBotao("🌐 Discord", 160, function()
+    CriarBotao("🌐 Discord", 185, function()
         setclipboard("https://discord.gg/scriptroblox")
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Discord",
@@ -95,14 +118,12 @@ for _, p in ipairs(Players:GetPlayers()) do
     end
 end
 
--- 📌 Novo jogador
 Players.PlayerAdded:Connect(function(p)
     if p ~= LocalPlayer then
         CriarCaixa(p)
     end
 end)
 
--- 🗑 Remove desenho ao sair
 Players.PlayerRemoving:Connect(function(p)
     if Drawings[p] then
         Drawings[p]:Remove()
@@ -110,7 +131,7 @@ Players.PlayerRemoving:Connect(function(p)
     end
 end)
 
--- 🔁 Atualiza as caixas no ESP + aplica Speed/Jump
+-- 🔁 Atualiza ESP + Jump
 RunService.RenderStepped:Connect(function()
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
@@ -141,12 +162,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- 💨 Speed igual ao primeiro código
-    if SpeedAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = VelocidadeDesejada
-    end
-
-    -- 🦘 Jump
+    -- 🦘 Jump regulável
     if JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
         LocalPlayer.Character.Humanoid.JumpPower = JumpPowerDesejado
         LocalPlayer.Character.Humanoid.UseJumpPower = true
@@ -155,13 +171,10 @@ end)
 
 -- 🔄 Reaplica ao renascer
 LocalPlayer.CharacterAdded:Connect(function(char)
-    char:WaitForChild("Humanoid")
-    if SpeedAtivo then
-        char.Humanoid.WalkSpeed = VelocidadeDesejada
-    end
+    local hum = char:WaitForChild("Humanoid")
     if JumpAtivo then
-        char.Humanoid.JumpPower = JumpPowerDesejado
-        char.Humanoid.UseJumpPower = true
+        hum.JumpPower = JumpPowerDesejado
+        hum.UseJumpPower = true
     end
 end)
 
