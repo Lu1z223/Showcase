@@ -1,4 +1,4 @@
--- ✅ ESP + Jump (com regulagem) corrigidos para "Roube Um Brainrot"
+-- ✅ ESP Players (melhorado) + ESP Bases (com contador de tempo)
 -- ✅ Interface Azul + Botão Discord
 -- ✅ Autorizado para testes
 
@@ -7,18 +7,22 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local ESPAtivo, JumpAtivo = false, false
-local JumpPowerDesejado = 100
-local Drawings = {}
+-- Configurações
+local ESPAtivo, BasesESPAtivo = false, false
+local DrawingsPlayers = {}
+local DrawingsBases = {}
 
--- 🎨 Cria GUI com cor azul
+-- Ajuste: Nome da pasta das bases no mapa
+local Bases = workspace:WaitForChild("Bases") -- 🔹 troque se no seu jogo for outro nome!
+
+-- 🎨 Interface
 local function CriarInterface()
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.ResetOnSpawn = false
     gui.Name = "PainelHack"
 
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 220, 0, 240)
+    frame.Size = UDim2.new(0, 220, 0, 200)
     frame.Position = UDim2.new(0, 10, 0, 10)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
     frame.BorderSizePixel = 0
@@ -26,7 +30,7 @@ local function CriarInterface()
     local titulo = Instance.new("TextLabel", frame)
     titulo.Size = UDim2.new(1, 0, 0, 30)
     titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
-    titulo.Text = "Injectin - Roblox Free"
+    titulo.Text = "INJECTION - ROBLOX FREE"
     titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
     titulo.TextSize = 18
     titulo.Font = Enum.Font.SourceSansBold
@@ -46,52 +50,17 @@ local function CriarInterface()
         return botao
     end
 
-    CriarBotao("ESP: OFF", 40, function(btn)
+    CriarBotao("ESP Players: OFF", 40, function(btn)
         ESPAtivo = not ESPAtivo
-        btn.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
+        btn.Text = ESPAtivo and "ESP Players: ON" or "ESP Players: OFF"
     end)
 
-    CriarBotao("Jump: OFF", 80, function(btn)
-        JumpAtivo = not JumpAtivo
-        if not JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.JumpPower = 50
-        end
-        btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
+    CriarBotao("ESP Bases: OFF", 80, function(btn)
+        BasesESPAtivo = not BasesESPAtivo
+        btn.Text = BasesESPAtivo and "ESP Bases: ON" or "ESP Bases: OFF"
     end)
 
-    -- Caixa de regulagem do Jump
-    local sliderLabel = Instance.new("TextLabel", frame)
-    sliderLabel.Size = UDim2.new(1, -20, 0, 20)
-    sliderLabel.Position = UDim2.new(0, 10, 0, 120)
-    sliderLabel.BackgroundTransparency = 1
-    sliderLabel.TextColor3 = Color3.new(1, 1, 1)
-    sliderLabel.Font = Enum.Font.SourceSans
-    sliderLabel.TextSize = 16
-    sliderLabel.Text = "Jump: " .. JumpPowerDesejado
-
-    local caixa = Instance.new("TextBox", frame)
-    caixa.Size = UDim2.new(1, -20, 0, 30)
-    caixa.Position = UDim2.new(0, 10, 0, 145)
-    caixa.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
-    caixa.TextColor3 = Color3.new(1, 1, 1)
-    caixa.Font = Enum.Font.SourceSans
-    caixa.TextSize = 16
-    caixa.Text = tostring(JumpPowerDesejado)
-
-    caixa.FocusLost:Connect(function(enter)
-        if enter then
-            local valor = tonumber(caixa.Text)
-            if valor and valor > 0 then
-                JumpPowerDesejado = valor
-                sliderLabel.Text = "Jump: " .. JumpPowerDesejado
-            else
-                caixa.Text = tostring(JumpPowerDesejado)
-            end
-        end
-    end)
-
-    -- Botão Discord
-    CriarBotao("🌐 Discord", 185, function()
+    CriarBotao("🌐 Discord", 130, function()
         setclipboard("https://discord.gg/scriptroblox")
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "Discord",
@@ -101,80 +70,117 @@ local function CriarInterface()
     end)
 end
 
--- 🔲 Cria caixa 2D para cada jogador
-local function CriarCaixa(plr)
+-- 🧍 ESP Player melhorado (Caixa + Nome + Distância)
+local function CriarCaixaPlayer(plr)
     local box = Drawing.new("Square")
     box.Visible = false
     box.Thickness = 2
     box.Color = Color3.fromRGB(0, 255, 255)
     box.Filled = false
-    Drawings[plr] = box
+
+    local texto = Drawing.new("Text")
+    texto.Visible = false
+    texto.Size = 16
+    texto.Color = Color3.fromRGB(255, 255, 255)
+    texto.Center = true
+    texto.Outline = true
+
+    DrawingsPlayers[plr] = {Box = box, Texto = texto}
 end
 
--- 🧍 Cria ESP para todos os jogadores existentes
 for _, p in ipairs(Players:GetPlayers()) do
     if p ~= LocalPlayer then
-        CriarCaixa(p)
+        CriarCaixaPlayer(p)
     end
 end
 
 Players.PlayerAdded:Connect(function(p)
     if p ~= LocalPlayer then
-        CriarCaixa(p)
+        CriarCaixaPlayer(p)
     end
 end)
 
 Players.PlayerRemoving:Connect(function(p)
-    if Drawings[p] then
-        Drawings[p]:Remove()
-        Drawings[p] = nil
+    if DrawingsPlayers[p] then
+        DrawingsPlayers[p].Box:Remove()
+        DrawingsPlayers[p].Texto:Remove()
+        DrawingsPlayers[p] = nil
     end
 end)
 
--- 🔁 Atualiza ESP + Jump
-RunService.RenderStepped:Connect(function()
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            local box = Drawings[plr]
-            if not box then
-                CriarCaixa(plr)
-                box = Drawings[plr]
-            end
-            local char = plr.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            local head = char and char:FindFirstChild("Head")
+-- 🏠 ESP Bases (com tempo)
+local function CriarESPBase(base)
+    local texto = Drawing.new("Text")
+    texto.Visible = false
+    texto.Size = 16
+    texto.Color = Color3.fromRGB(0, 255, 0)
+    texto.Center = true
+    texto.Outline = true
+    DrawingsBases[base] = texto
+end
 
-            if ESPAtivo and hrp and head and (not plr.Team or plr.Team ~= LocalPlayer.Team) then
-                local top = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                local bottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 2.5, 0))
-                if bottom.Z > 0 then
-                    local height = math.abs(top.Y - bottom.Y)
-                    local width = height / 2
-                    box.Size = Vector2.new(width, height)
-                    box.Position = Vector2.new(top.X - width / 2, top.Y)
-                    box.Visible = true
-                else
-                    box.Visible = false
-                end
+for _, base in ipairs(Bases:GetChildren()) do
+    CriarESPBase(base)
+end
+
+Bases.ChildAdded:Connect(function(base)
+    CriarESPBase(base)
+end)
+
+Bases.ChildRemoved:Connect(function(base)
+    if DrawingsBases[base] then
+        DrawingsBases[base]:Remove()
+        DrawingsBases[base] = nil
+    end
+end)
+
+-- 🔁 Atualização do ESP
+RunService.RenderStepped:Connect(function()
+    -- ESP Players
+    for plr, dados in pairs(DrawingsPlayers) do
+        local box, texto = dados.Box, dados.Texto
+        if ESPAtivo and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Head") then
+            local hrp = plr.Character.HumanoidRootPart
+            local head = plr.Character.Head
+            local top = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+            local bottom = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 2.5, 0))
+
+            if bottom.Z > 0 then
+                local height = math.abs(top.Y - bottom.Y)
+                local width = height / 2
+                box.Size = Vector2.new(width, height)
+                box.Position = Vector2.new(top.X - width / 2, top.Y)
+                box.Visible = true
+
+                -- Distância
+                local dist = (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")) and math.floor((hrp.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude) or 0
+                texto.Text = plr.Name .. " [" .. dist .. "m]"
+                texto.Position = Vector2.new(top.X, top.Y - 15)
+                texto.Visible = true
             else
                 box.Visible = false
+                texto.Visible = false
             end
+        else
+            box.Visible = false
+            texto.Visible = false
         end
     end
 
-    -- 🦘 Jump regulável
-    if JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.JumpPower = JumpPowerDesejado
-        LocalPlayer.Character.Humanoid.UseJumpPower = true
-    end
-end)
-
--- 🔄 Reaplica ao renascer
-LocalPlayer.CharacterAdded:Connect(function(char)
-    local hum = char:WaitForChild("Humanoid")
-    if JumpAtivo then
-        hum.JumpPower = JumpPowerDesejado
-        hum.UseJumpPower = true
+    -- ESP Bases
+    for base, texto in pairs(DrawingsBases) do
+        if BasesESPAtivo and base and base:IsA("BasePart") and base:FindFirstChild("Tempo") then
+            local pos, onScreen = Camera:WorldToViewportPoint(base.Position + Vector3.new(0, 5, 0))
+            if onScreen then
+                texto.Position = Vector2.new(pos.X, pos.Y)
+                texto.Text = "Base (" .. tostring(base.Tempo.Value) .. "s)"
+                texto.Visible = true
+            else
+                texto.Visible = false
+            end
+        else
+            texto.Visible = false
+        end
     end
 end)
 
