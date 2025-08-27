@@ -1,5 +1,5 @@
--- ✅ ESP Players + ESP Bases + Jump (com regulagem) + Interface antiga com minimizar/fechar
--- ✅ Botão Discord
+-- ✅ ESP + Jump (com regulagem) corrigidos para "Roube Um Brainrot"
+-- ✅ Interface Azul + Botão Discord
 -- ✅ Autorizado para testes
 
 local Players = game:GetService("Players")
@@ -7,144 +7,101 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local ESPAtivo, JumpAtivo, BasesESPAtivo = false, false, false
+local ESPAtivo, JumpAtivo = false, false
 local JumpPowerDesejado = 100
 local Drawings = {}
-local DrawingsBases = {}
 
--- Ajuste aqui: nome da pasta das bases
-local Bases = workspace:WaitForChild("Bases") -- Troque se no seu jogo for outro nome!
+-- 🎨 Cria GUI com cor azul
+local function CriarInterface()
+    local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+    gui.ResetOnSpawn = false
+    gui.Name = "PainelHack"
 
--- 🎨 Cria GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "PainelHack"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 220, 0, 240)
+    frame.Position = UDim2.new(0, 10, 0, 10)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
+    frame.BorderSizePixel = 0
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 220, 0, 270)
-frame.Position = UDim2.new(0, 10, 0, 10)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 50)
-frame.BorderSizePixel = 0
+    local titulo = Instance.new("TextLabel", frame)
+    titulo.Size = UDim2.new(1, 0, 0, 30)
+    titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
+    titulo.Text = "INJECTION - ROBLOX FREE"
+    titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titulo.TextSize = 18
+    titulo.Font = Enum.Font.SourceSansBold
 
--- Barra do título
-local titulo = Instance.new("TextLabel", frame)
-titulo.Size = UDim2.new(1, 0, 0, 30)
-titulo.BackgroundColor3 = Color3.fromRGB(0, 85, 255)
-titulo.Text = "INJECTION - ROBLOX FREE"
-titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
-titulo.TextSize = 18
-titulo.Font = Enum.Font.SourceSansBold
-
--- Botão minimizar
-local minimizar = Instance.new("TextButton", titulo)
-minimizar.Size = UDim2.new(0, 30, 1, 0)
-minimizar.Position = UDim2.new(0, 0, 0, 0)
-minimizar.BackgroundColor3 = Color3.fromRGB(0, 60, 180)
-minimizar.Text = "-"
-minimizar.TextColor3 = Color3.fromRGB(255, 255, 255)
-minimizar.TextSize = 20
-minimizar.Font = Enum.Font.SourceSansBold
-
--- Botão fechar
-local fechar = Instance.new("TextButton", titulo)
-fechar.Size = UDim2.new(0, 30, 1, 0)
-fechar.Position = UDim2.new(1, -30, 0, 0)
-fechar.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-fechar.Text = "X"
-fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
-fechar.TextSize = 20
-fechar.Font = Enum.Font.SourceSansBold
-
--- Lógica minimizar/fechar
-local minimizado = false
-minimizar.MouseButton1Click:Connect(function()
-    minimizado = not minimizado
-    for _, obj in ipairs(frame:GetChildren()) do
-        if obj ~= titulo and obj ~= minimizar and obj ~= fechar then
-            obj.Visible = not minimizado
-        end
+    local function CriarBotao(texto, posY, aoClicar)
+        local botao = Instance.new("TextButton", frame)
+        botao.Size = UDim2.new(1, -20, 0, 30)
+        botao.Position = UDim2.new(0, 10, 0, posY)
+        botao.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
+        botao.TextColor3 = Color3.new(1, 1, 1)
+        botao.Font = Enum.Font.SourceSans
+        botao.TextSize = 16
+        botao.Text = texto
+        botao.MouseButton1Click:Connect(function()
+            aoClicar(botao)
+        end)
+        return botao
     end
-    frame.Size = minimizado and UDim2.new(0, 220, 0, 30) or UDim2.new(0, 220, 0, 270)
-end)
-fechar.MouseButton1Click:Connect(function()
-    gui:Destroy()
-end)
 
--- Função criar botão
-local function CriarBotao(texto, posY, aoClicar)
-    local botao = Instance.new("TextButton", frame)
-    botao.Size = UDim2.new(1, -20, 0, 30)
-    botao.Position = UDim2.new(0, 10, 0, posY)
-    botao.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
-    botao.TextColor3 = Color3.new(1, 1, 1)
-    botao.Font = Enum.Font.SourceSans
-    botao.TextSize = 16
-    botao.Text = texto
-    botao.MouseButton1Click:Connect(function()
-        aoClicar(botao)
+    CriarBotao("ESP: OFF", 40, function(btn)
+        ESPAtivo = not ESPAtivo
+        btn.Text = ESPAtivo and "ESP: ON" or "ESP: OFF"
     end)
-    return botao
+
+    CriarBotao("Jump: OFF", 80, function(btn)
+        JumpAtivo = not JumpAtivo
+        if not JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+        btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
+    end)
+
+    -- Caixa de regulagem do Jump
+    local sliderLabel = Instance.new("TextLabel", frame)
+    sliderLabel.Size = UDim2.new(1, -20, 0, 20)
+    sliderLabel.Position = UDim2.new(0, 10, 0, 120)
+    sliderLabel.BackgroundTransparency = 1
+    sliderLabel.TextColor3 = Color3.new(1, 1, 1)
+    sliderLabel.Font = Enum.Font.SourceSans
+    sliderLabel.TextSize = 16
+    sliderLabel.Text = "Jump: " .. JumpPowerDesejado
+
+    local caixa = Instance.new("TextBox", frame)
+    caixa.Size = UDim2.new(1, -20, 0, 30)
+    caixa.Position = UDim2.new(0, 10, 0, 145)
+    caixa.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
+    caixa.TextColor3 = Color3.new(1, 1, 1)
+    caixa.Font = Enum.Font.SourceSans
+    caixa.TextSize = 16
+    caixa.Text = tostring(JumpPowerDesejado)
+
+    caixa.FocusLost:Connect(function(enter)
+        if enter then
+            local valor = tonumber(caixa.Text)
+            if valor and valor > 0 then
+                JumpPowerDesejado = valor
+                sliderLabel.Text = "Jump: " .. JumpPowerDesejado
+            else
+                caixa.Text = tostring(JumpPowerDesejado)
+            end
+        end
+    end)
+
+    -- Botão Discord
+    CriarBotao("🌐 Discord", 185, function()
+        setclipboard("https://discord.gg/scriptroblox")
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Discord",
+            Text = "Link copiado para área de transferência!",
+            Duration = 3
+        })
+    end)
 end
 
--- Botões principais
-CriarBotao("ESP Players: OFF", 40, function(btn)
-    ESPAtivo = not ESPAtivo
-    btn.Text = ESPAtivo and "ESP Players: ON" or "ESP Players: OFF"
-end)
-CriarBotao("Jump: OFF", 80, function(btn)
-    JumpAtivo = not JumpAtivo
-    if not JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character.Humanoid.JumpPower = 50
-    end
-    btn.Text = JumpAtivo and "Jump: ON" or "Jump: OFF"
-end)
-CriarBotao("ESP Bases: OFF", 185, function(btn)
-    BasesESPAtivo = not BasesESPAtivo
-    btn.Text = BasesESPAtivo and "ESP Bases: ON" or "ESP Bases: OFF"
-end)
-CriarBotao("🌐 Discord", 225, function()
-    setclipboard("https://discord.gg/scriptroblox")
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Discord",
-        Text = "Link copiado para área de transferência!",
-        Duration = 3
-    })
-end)
-
--- Caixa de regulagem do Jump
-local sliderLabel = Instance.new("TextLabel", frame)
-sliderLabel.Size = UDim2.new(1, -20, 0, 20)
-sliderLabel.Position = UDim2.new(0, 10, 0, 120)
-sliderLabel.BackgroundTransparency = 1
-sliderLabel.TextColor3 = Color3.new(1, 1, 1)
-sliderLabel.Font = Enum.Font.SourceSans
-sliderLabel.TextSize = 16
-sliderLabel.Text = "Jump: " .. JumpPowerDesejado
-
-local caixa = Instance.new("TextBox", frame)
-caixa.Size = UDim2.new(1, -20, 0, 30)
-caixa.Position = UDim2.new(0, 10, 0, 145)
-caixa.BackgroundColor3 = Color3.fromRGB(0, 40, 100)
-caixa.TextColor3 = Color3.new(1, 1, 1)
-caixa.Font = Enum.Font.SourceSans
-caixa.TextSize = 16
-caixa.Text = tostring(JumpPowerDesejado)
-
-caixa.FocusLost:Connect(function(enter)
-    if enter then
-        local valor = tonumber(caixa.Text)
-        if valor and valor > 0 then
-            JumpPowerDesejado = valor
-            sliderLabel.Text = "Jump: " .. JumpPowerDesejado
-        else
-            caixa.Text = tostring(JumpPowerDesejado)
-        end
-    end
-end)
-
--- 🔲 ESP Players
+-- 🔲 Cria caixa 2D para cada jogador
 local function CriarCaixa(plr)
     local box = Drawing.new("Square")
     box.Visible = false
@@ -154,6 +111,7 @@ local function CriarCaixa(plr)
     Drawings[plr] = box
 end
 
+-- 🧍 Cria ESP para todos os jogadores existentes
 for _, p in ipairs(Players:GetPlayers()) do
     if p ~= LocalPlayer then
         CriarCaixa(p)
@@ -173,34 +131,8 @@ Players.PlayerRemoving:Connect(function(p)
     end
 end)
 
--- 🏠 ESP Bases
-local function CriarESPBase(base)
-    local texto = Drawing.new("Text")
-    texto.Visible = false
-    texto.Size = 16
-    texto.Color = Color3.fromRGB(0, 255, 0)
-    texto.Center = true
-    texto.Outline = true
-    DrawingsBases[base] = texto
-end
-
-for _, base in ipairs(Bases:GetChildren()) do
-    CriarESPBase(base)
-end
-
-Bases.ChildAdded:Connect(function(base)
-    CriarESPBase(base)
-end)
-Bases.ChildRemoved:Connect(function(base)
-    if DrawingsBases[base] then
-        DrawingsBases[base]:Remove()
-        DrawingsBases[base] = nil
-    end
-end)
-
 -- 🔁 Atualiza ESP + Jump
 RunService.RenderStepped:Connect(function()
-    -- Players
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             local box = Drawings[plr]
@@ -230,10 +162,21 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Bases
-    for base, texto in pairs(DrawingsBases) do
-        if BasesESPAtivo and base and base:IsA("BasePart") and base:FindFirstChild("Tempo") then -- Troque "Tempo" se necessário
-            local pos, onScreen = Camera:WorldToViewportPoint(base.Position + Vector3.new(0, 5, 0))
-            if onScreen then
-                texto.Position = Vector2.new(pos.X, pos.Y)
-                texto.Text =
+    -- 🦘 Jump regulável
+    if JumpAtivo and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = JumpPowerDesejado
+        LocalPlayer.Character.Humanoid.UseJumpPower = true
+    end
+end)
+
+-- 🔄 Reaplica ao renascer
+LocalPlayer.CharacterAdded:Connect(function(char)
+    local hum = char:WaitForChild("Humanoid")
+    if JumpAtivo then
+        hum.JumpPower = JumpPowerDesejado
+        hum.UseJumpPower = true
+    end
+end)
+
+-- 🟦 Inicializa
+CriarInterface()
