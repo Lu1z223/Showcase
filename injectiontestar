@@ -183,7 +183,7 @@ local function DetectarBases()
                 local esp = Drawing.new("Text")
                 esp.Color = Color3.fromRGB(255, 0, 0)
                 esp.Text = "0s"
-                esp.Size = 32
+                esp.Size = 50
                 esp.Center = true
                 esp.Visible = true
                 BaseDrawings[obj] = esp
