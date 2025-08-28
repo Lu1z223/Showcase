@@ -23,7 +23,7 @@ local settings = {
 }
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PiterHubB"
+screenGui.Name = "PiterGAb"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
@@ -328,27 +328,39 @@ local function updateBaseESP()
         end
     end
     
-    for base, _ in pairs(foundBases) do
-        if not baseBillboards[base] then
-            local billboard = Instance.new("BillboardGui")
-            billboard.Name = "BaseTimerESP"
-            billboard.Size = UDim2.new(0, 200, 0, 50)
-            billboard.StudsOffset = Vector3.new(0, 8, 0)
-            billboard.AlwaysOnTop = true
-            billboard.Adornee = base
-            billboard.Parent = base
-            
-            local textLabel = Instance.new("TextLabel")
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.Text = "Carregando..."
-            textLabel.TextColor3 = Color3.new(1, 1, 1)
-            textLabel.TextScaled = true
-            textLabel.Font = Enum.Font.SourceSansBold
-            textLabel.Parent = billboard
-            
-            baseBillboards[base] = textLabel
-        end
+    if not baseBillboards[base] then
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "BaseTimerESP"
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 8, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = base
+    billboard.Parent = base
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Name = "TextLabel"
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = "Carregando..."
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.Font = Enum.Font.SourceSansBold
+    textLabel.Parent = billboard
+
+    -- agora salvamos o billboard inteiro
+    baseBillboards[base] = billboard
+end
+
+-- quando for atualizar:
+local baseTime = getBaseTime(base)
+local label = baseBillboards[base] and baseBillboards[base]:FindFirstChild("TextLabel")
+if label then
+    if baseTime then
+        label.Text = baseTime .. "s"
+    else
+        label.Text = "60s"
+    end
+end
         
         local baseTime = getBaseTime(base)
         if baseTime then
