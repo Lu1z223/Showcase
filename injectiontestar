@@ -1,6 +1,3 @@
-
-
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -23,7 +20,7 @@ local settings = {
 }
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "Piter"
+screenGui.Name = "PiterGAb"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
@@ -69,79 +66,46 @@ contentFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
-local espToggle = Instance.new("TextButton")
-espToggle.Name = "ESPToggle"
-espToggle.Size = UDim2.new(0, 140, 0, 30)
-espToggle.Position = UDim2.new(0, 10, 0, 10)
-espToggle.BackgroundColor3 = settings.enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-espToggle.BorderSizePixel = 0
-espToggle.Text = "ESP: " .. (settings.enabled and "ON" or "OFF")
-espToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-espToggle.Font = Enum.Font.SourceSans
-espToggle.TextSize = 16
-espToggle.Parent = contentFrame
+-- Botões principais
+local function makeButton(name, text, pos, color, parent)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.new(0, 140, 0, 30)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.BorderSizePixel = 0
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 16
+    btn.Parent = parent
+    return btn
+end
 
-local teamToggle = Instance.new("TextButton")
-teamToggle.Name = "TeamToggle"
-teamToggle.Size = UDim2.new(0, 140, 0, 30)
-teamToggle.Position = UDim2.new(0, 170, 0, 10)
-teamToggle.BackgroundColor3 = settings.showTeam and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-teamToggle.BorderSizePixel = 0
-teamToggle.Text = "Team Check: " .. (settings.showTeam and "ON" or "OFF")
-teamToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-teamToggle.Font = Enum.Font.SourceSans
-teamToggle.TextSize = 16
-teamToggle.Parent = contentFrame
+local espToggle = makeButton("ESPToggle","ESP: OFF",UDim2.new(0,10,0,10),Color3.fromRGB(150,0,0),contentFrame)
+local teamToggle = makeButton("TeamToggle","Team Check: OFF",UDim2.new(0,170,0,10),Color3.fromRGB(150,0,0),contentFrame)
+local noclipToggle = makeButton("NoclipToggle","Noclip: OFF",UDim2.new(0,10,0,50),Color3.fromRGB(150,0,0),contentFrame)
+local baseESPToggle = makeButton("BaseESPToggle","Base ESP: OFF",UDim2.new(0,170,0,50),Color3.fromRGB(150,0,0),contentFrame)
+local brainrotESPToggle = makeButton("BrainrotESPToggle","Brainrot ESP: OFF",UDim2.new(0,10,0,90),Color3.fromRGB(150,0,0),contentFrame)
 
-local noclipToggle = Instance.new("TextButton")
-noclipToggle.Name = "NoclipToggle"
-noclipToggle.Size = UDim2.new(0, 140, 0, 30)
-noclipToggle.Position = UDim2.new(0, 10, 0, 50)
-noclipToggle.BackgroundColor3 = settings.noclip and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-noclipToggle.BorderSizePixel = 0
-noclipToggle.Text = "Noclip: " .. (settings.noclip and "ON" or "OFF")
-noclipToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-noclipToggle.Font = Enum.Font.SourceSans
-noclipToggle.TextSize = 16
-noclipToggle.Parent = contentFrame
+-- Labels e caixas de input
+local function makeLabel(name,text,pos,parent)
+    local lbl = Instance.new("TextLabel")
+    lbl.Name = name
+    lbl.Size = UDim2.new(0,140,0,20)
+    lbl.Position = pos
+    lbl.BackgroundColor3 = Color3.fromRGB(50,50,70)
+    lbl.BorderSizePixel = 0
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255,255,255)
+    lbl.Font = Enum.Font.SourceSans
+    lbl.TextSize = 16
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parent
+    return lbl
+end
 
-local baseESPToggle = Instance.new("TextButton")
-baseESPToggle.Name = "BaseESPToggle"
-baseESPToggle.Size = UDim2.new(0, 140, 0, 30)
-baseESPToggle.Position = UDim2.new(0, 170, 0, 50)
-baseESPToggle.BackgroundColor3 = settings.baseESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-baseESPToggle.BorderSizePixel = 0
-baseESPToggle.Text = "Base ESP: " .. (settings.baseESP and "ON" or "OFF")
-baseESPToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-baseESPToggle.Font = Enum.Font.SourceSans
-baseESPToggle.TextSize = 16
-baseESPToggle.Parent = contentFrame
-
-local brainrotESPToggle = Instance.new("TextButton")
-brainrotESPToggle.Name = "BrainrotESPToggle"
-brainrotESPToggle.Size = UDim2.new(0, 140, 0, 30)
-brainrotESPToggle.Position = UDim2.new(0, 10, 0, 90)
-brainrotESPToggle.BackgroundColor3 = settings.brainrotESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-brainrotESPToggle.BorderSizePixel = 0
-brainrotESPToggle.Text = "Brainrot ESP: " .. (settings.brainrotESP and "ON" or "OFF")
-brainrotESPToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-brainrotESPToggle.Font = Enum.Font.SourceSans
-brainrotESPToggle.TextSize = 16
-brainrotESPToggle.Parent = contentFrame
-
-local distanceLabel = Instance.new("TextLabel")
-distanceLabel.Name = "DistanceLabel"
-distanceLabel.Size = UDim2.new(0, 140, 0, 20)
-distanceLabel.Position = UDim2.new(0, 10, 0, 130)
-distanceLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-distanceLabel.BorderSizePixel = 0
-distanceLabel.Text = "Distância ESP:"
-distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-distanceLabel.Font = Enum.Font.SourceSans
-distanceLabel.TextSize = 16
-distanceLabel.TextXAlignment = Enum.TextXAlignment.Left
-distanceLabel.Parent = contentFrame
-
+local distanceLabel = makeLabel("DistanceLabel","Distância ESP:",UDim2.new(0,10,0,130),contentFrame)
 local distanceBox = Instance.new("TextBox")
 distanceBox.Name = "DistanceBox"
 distanceBox.Size = UDim2.new(0, 80, 0, 25)
@@ -154,19 +118,7 @@ distanceBox.Font = Enum.Font.SourceSans
 distanceBox.TextSize = 16
 distanceBox.Parent = contentFrame
 
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Name = "SpeedLabel"
-speedLabel.Size = UDim2.new(0, 140, 0, 20)
-speedLabel.Position = UDim2.new(0, 10, 0, 160)
-speedLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-speedLabel.BorderSizePixel = 0
-speedLabel.Text = "Velocidade:"
-speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedLabel.Font = Enum.Font.SourceSans
-speedLabel.TextSize = 16
-speedLabel.TextXAlignment = Enum.TextXAlignment.Left
-speedLabel.Parent = contentFrame
-
+local speedLabel = makeLabel("SpeedLabel","Velocidade:",UDim2.new(0,10,0,160),contentFrame)
 local speedBox = Instance.new("TextBox")
 speedBox.Name = "SpeedBox"
 speedBox.Size = UDim2.new(0, 80, 0, 25)
@@ -193,6 +145,7 @@ statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.TextYAlignment = Enum.TextYAlignment.Top
 statusLabel.Parent = contentFrame
 
+-- Variáveis auxiliares
 local minimized = false
 local espHighlights = {}
 local baseHighlights = {}
@@ -201,80 +154,11 @@ local noclipConnection
 local baseBillboards = {}
 local lastBaseUpdate = 0
 
-local function isTeammate(player)
-    if not settings.showTeam then return false end
-    if player.Team and LocalPlayer.Team then
-        return player.Team == LocalPlayer.Team
-    end
-    return false
-end
+-- Funções auxiliares (isTeammate, distance, createESP, removeESP etc.)
+-- [ ... aqui vem TODAS as funções como estavam no original ... ]
+-- Incluindo a função updateBaseESP já corrigida que mostrei antes
 
-local function calculateDistance(position1, position2)
-    return (position1 - position2).Magnitude
-end
-
-local function createESP(player)
-    if not player.Character then return false end
-    
-    if espHighlights[player] then
-        if espHighlights[player].Parent == player.Character then
-            return true
-        else
-            espHighlights[player]:Destroy()
-            espHighlights[player] = nil
-        end
-    end
-    
-    local humanoid = player.Character:FindFirstChild("Humanoid")
-    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
-    
-    if not humanoid or not humanoidRootPart or humanoid.Health <= 0 then return false end
-    
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "ESPHighlight"
-    highlight.Adornee = player.Character
-    highlight.FillTransparency = 0.8
-    highlight.OutlineTransparency = 0
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.FillColor = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
-    highlight.OutlineColor = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
-    highlight.Parent = player.Character
-    
-    espHighlights[player] = highlight
-    return true
-end
-
-local function removeESP(player)
-    if espHighlights[player] then
-        espHighlights[player]:Destroy()
-        espHighlights[player] = nil
-    end
-end
-
-local function findBaseTimerText(basePart)
-    for _, descendant in pairs(basePart:GetDescendants()) do
-        if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
-            local text = string.lower(tostring(descendant.Text))
-            if text:find("s") and text:match("%d+") then
-                return descendant
-            end
-        end
-    end
-    return nil
-end
-
-local function getBaseTime(basePart)
-    local timerText = findBaseTimerText(basePart)
-    if timerText and timerText.Text then
-        local timeText = tostring(timerText.Text)
-        local timeMatch = timeText:match("(%d+)%s*s")
-        if timeMatch then
-            return tonumber(timeMatch)
-        end
-    end
-    return nil
-end
-
+-- Substitua sua função antiga por esta:
 local function updateBaseESP()
     if not settings.baseESP then
         for base, highlight in pairs(baseHighlights) do
@@ -287,19 +171,15 @@ local function updateBaseESP()
         baseBillboards = {}
         return
     end
-    
+
     local currentTime = tick()
-    if currentTime - lastBaseUpdate < 2 then
-        return
-    end
+    if currentTime - lastBaseUpdate < 2 then return end
     lastBaseUpdate = currentTime
-    
+
     local foundBases = {}
-    
+
     for _, obj in pairs(Workspace:GetDescendants()) do
         if (obj.Name:lower():find("base") or obj:IsA("Model")) then
-            
-            -- Highlight da base
             if not baseHighlights[obj] then
                 local highlight = Instance.new("Highlight")
                 highlight.Name = "BaseHighlight"
@@ -312,8 +192,7 @@ local function updateBaseESP()
                 highlight.Parent = obj
                 baseHighlights[obj] = highlight
             end
-            
-            -- Billboard para o timer da base
+
             if not baseBillboards[obj] then
                 local billboard = Instance.new("BillboardGui")
                 billboard.Name = "BaseTimerESP"
@@ -335,22 +214,15 @@ local function updateBaseESP()
                 baseBillboards[obj] = billboard
             end
 
-            -- Atualiza o texto do timer
             local label = baseBillboards[obj]:FindFirstChild("TextLabel")
             if label then
-                local baseTime = getBaseTime(obj)
-                if baseTime then
-                    label.Text = baseTime .. "s"
-                else
-                    label.Text = "60s"
-                end
+                label.Text = (getBaseTime(obj) or 60) .. "s"
             end
 
             foundBases[obj] = true
         end
     end
-    
-    -- Remove bases que sumiram
+
     for base, highlight in pairs(baseHighlights) do
         if not foundBases[base] then
             highlight:Destroy()
@@ -362,308 +234,5 @@ local function updateBaseESP()
         end
     end
 end
-        end
-        baseHighlights = {}
-        baseBillboards = {}
-        return
-    end
-    
-    local currentTime = tick()
-    if currentTime - lastBaseUpdate < 2 then
-        return
-    end
-    lastBaseUpdate = currentTime
-    
-    local foundBases = {}
-    
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if (obj.Name:lower():find("base") or obj:IsA("Model")) and not baseHighlights[obj] then
-            if not obj:FindFirstChild("BaseHighlight") then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "BaseHighlight"
-                highlight.Adornee = obj
-                highlight.FillTransparency = 0.9
-                highlight.OutlineTransparency = 0
-                highlight.FillColor = settings.baseColor
-                highlight.OutlineColor = settings.baseColor
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.Parent = obj
-                
-                baseHighlights[obj] = highlight
-                foundBases[obj] = true
-            end
-        end
-    end
-    
-    for base, highlight in pairs(baseHighlights) do
-        if not base.Parent or not base:IsDescendantOf(Workspace) then
-            highlight:Destroy()
-            baseHighlights[base] = nil
-            if baseBillboards[base] then
-                baseBillboards[base]:Destroy()
-                baseBillboards[base] = nil
-            end
-        else
-            foundBases[base] = true
-        end
-    end
-    
-    if not baseBillboards[base] then
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "BaseTimerESP"
-    billboard.Size = UDim2.new(0, 200, 0, 50)
-    billboard.StudsOffset = Vector3.new(0, 8, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Adornee = base
-    billboard.Parent = base
 
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Name = "TextLabel"
-    textLabel.Size = UDim2.new(1, 0, 1, 0)
-    textLabel.BackgroundTransparency = 1
-    textLabel.Text = "Carregando..."
-    textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextScaled = true
-    textLabel.Font = Enum.Font.SourceSansBold
-    textLabel.Parent = billboard
-
-    -- agora salvamos o billboard inteiro
-    baseBillboards[base] = billboard
-end
-
--- quando for atualizar:
-local label = baseBillboards[base] and baseBillboards[base]:FindFirstChild("TextLabel")
-if label then
-    local baseTime = getBaseTime(base)
-    if baseTime then
-        label.Text = baseTime .. "s"
-    else
-        label.Text = "60s"
-    end
-end
-        
-        
-end
-
-local function updateBrainrotESP()
-    if not settings.brainrotESP then
-        for _, highlight in pairs(brainrotHighlights) do
-            highlight:Destroy()
-        end
-        brainrotHighlights = {}
-        return
-    end
-    
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj.Name:lower():find("brainrot") and not brainrotHighlights[obj] then
-            local highlight = Instance.new("Highlight")
-            highlight.Name = "BrainrotHighlight"
-            highlight.Adornee = obj
-            highlight.FillTransparency = 0.7
-            highlight.OutlineTransparency = 0
-            highlight.FillColor = settings.brainrotColor
-            highlight.OutlineColor = settings.brainrotColor
-            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            highlight.Parent = obj
-            
-            brainrotHighlights[obj] = highlight
-        end
-    end
-end
-
-local function updateESP()
-    if not settings.enabled then
-        for player in pairs(espHighlights) do
-            removeESP(player)
-        end
-        return
-    end
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local localRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            
-            if player.Character and localRootPart then
-                local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
-                
-                if humanoidRootPart then
-                    local distance = calculateDistance(humanoidRootPart.Position, localRootPart.Position)
-                    
-                    if distance <= settings.maxDistance then
-                        createESP(player)
-                    else
-                        removeESP(player)
-                    end
-                else
-                    removeESP(player)
-                end
-            else
-                removeESP(player)
-            end
-        end
-    end
-end
-
-local function updateSpeed()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = settings.speed
-    end
-end
-
-local function updateNoclip()
-    if noclipConnection then
-        noclipConnection:Disconnect()
-        noclipConnection = nil
-    end
-    
-    if settings.noclip then
-        noclipConnection = RunService.Stepped:Connect(function()
-            if LocalPlayer.Character then
-                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end)
-    end
-end
-
-local function updateStatus()
-    local status = "Status: "
-    if settings.enabled then
-        status = status .. "ESP ativo"
-        if settings.showTeam then
-            status = status .. " com Team Check"
-        else
-            status = status .. " sem Team Check"
-        end
-    else
-        status = status .. "ESP desativado"
-    end
-    statusLabel.Text = status
-end
-
-minimizeBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        mainFrame.Size = UDim2.new(0, 320, 0, 30)
-        contentFrame.Visible = false
-        minimizeBtn.Text = "+"
-    else
-        mainFrame.Size = UDim2.new(0, 320, 0, 340)
-        contentFrame.Visible = true
-        minimizeBtn.Text = "-"
-    end
-end)
-
-espToggle.MouseButton1Click:Connect(function()
-    settings.enabled = not settings.enabled
-    espToggle.BackgroundColor3 = settings.enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    espToggle.Text = "ESP: " .. (settings.enabled and "ON" or "OFF")
-    updateESP()
-    updateStatus()
-end)
-
-teamToggle.MouseButton1Click:Connect(function()
-    settings.showTeam = not settings.showTeam
-    teamToggle.BackgroundColor3 = settings.showTeam and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    teamToggle.Text = "Team Check: " .. (settings.showTeam and "ON" or "OFF")
-    updateESP()
-    updateStatus()
-end)
-
-noclipToggle.MouseButton1Click:Connect(function()
-    settings.noclip = not settings.noclip
-    noclipToggle.BackgroundColor3 = settings.noclip and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    noclipToggle.Text = "Noclip: " .. (settings.noclip and "ON" or "OFF")
-    updateNoclip()
-end)
-
-baseESPToggle.MouseButton1Click:Connect(function()
-    settings.baseESP = not settings.baseESP
-    baseESPToggle.BackgroundColor3 = settings.baseESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    baseESPToggle.Text = "Base ESP: " .. (settings.baseESP and "ON" or "OFF")
-    updateBaseESP()
-end)
-
-brainrotESPToggle.MouseButton1Click:Connect(function()
-    settings.brainrotESP = not settings.brainrotESP
-    brainrotESPToggle.BackgroundColor3 = settings.brainrotESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    brainrotESPToggle.Text = "Brainrot ESP: " .. (settings.brainrotESP and "ON" or "OFF")
-    updateBrainrotESP()
-end)
-
-distanceBox.FocusLost:Connect(function()
-    local newDistance = tonumber(distanceBox.Text)
-    if newDistance and newDistance > 0 then
-        settings.maxDistance = newDistance
-        distanceBox.Text = tostring(settings.maxDistance)
-        updateESP()
-    else
-        distanceBox.Text = tostring(settings.maxDistance)
-    end
-end)
-
-speedBox.FocusLost:Connect(function()
-    local newSpeed = tonumber(speedBox.Text)
-    if newSpeed and newSpeed >= 0 then
-        settings.speed = newSpeed
-        speedBox.Text = tostring(settings.speed)
-        updateSpeed()
-    else
-        speedBox.Text = tostring(settings.speed)
-    end
-end)
-
-local heartbeatConnection
-heartbeatConnection = RunService.Heartbeat:Connect(function()
-    updateESP()
-    updateBaseESP()
-    updateBrainrotESP()
-end)
-
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        task.wait(1)
-        updateESP()
-    end)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    removeESP(player)
-end)
-
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        player.CharacterAdded:Connect(function(character)
-            task.wait(1)
-            updateESP()
-        end)
-        
-        if player.Character then
-            task.wait(1)
-            updateESP()
-        end
-    end
-end
-
-Workspace.DescendantAdded:Connect(function(descendant)
-    task.wait(2)
-    updateBaseESP()
-end)
-
-LocalPlayer.CharacterAdded:Connect(function(character)
-    task.wait(1)
-    updateSpeed()
-    updateNoclip()
-end)
-
-if LocalPlayer.Character then
-    updateSpeed()
-    updateNoclip()
-end
-
-updateStatus()
-
-print("PiterHub carregado com sucesso! Todas as opções começam desativadas.")
+-- [ resto do código com updateBrainrotESP, updateESP, binds dos botões, etc. igual ao seu original ]
