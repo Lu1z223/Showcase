@@ -352,9 +352,9 @@ local function updateBaseESP()
 end
 
 -- quando for atualizar:
-local baseTime = getBaseTime(base)
 local label = baseBillboards[base] and baseBillboards[base]:FindFirstChild("TextLabel")
 if label then
+    local baseTime = getBaseTime(base)
     if baseTime then
         label.Text = baseTime .. "s"
     else
@@ -362,13 +362,7 @@ if label then
     end
 end
         
-        local baseTime = getBaseTime(base)
-        if baseTime then
-            baseBillboards[base].Text = baseTime .. "s"
-        else
-            baseBillboards[base].Text = "60s"
-        end
-    end
+        
 end
 
 local function updateBrainrotESP()
