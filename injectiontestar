@@ -1,7 +1,27 @@
+
+
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+
+if not setclipboard then
+    if writeclipboard then
+        setclipboard = writeclipboard
+    else
+        setclipboard = function(text)
+            local clipBoard = Instance.new("StringValue")
+            clipBoard.Name = "Clipboard"
+            clipBoard.Value = text
+            clipBoard.Parent = CoreGui
+            clipBoard:Destroy()
+        end
+    end
+end
 
 local settings = {
     enabled = false,
@@ -11,23 +31,26 @@ local settings = {
     noclip = false,
     baseESP = false,
     brainrotESP = false,
+    highJump = false,
+    jumpPower = 50,
+    godMode = false,
     teamColors = {
         ally = Color3.fromRGB(0, 255, 0),
         enemy = Color3.fromRGB(180, 0, 255)
     },
     baseColor = Color3.fromRGB(255, 255, 0),
-    brainrotColor = Color3.fromRGB(255, 165, 0)
+    brainrotColor = Color3.fromRGB(255, 255, 255)
 }
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PiterGAb"
+screenGui.Name = "PiterHub"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 320, 0, 340)
+mainFrame.Size = UDim2.new(0, 280, 0, 320)
 mainFrame.Position = UDim2.new(0, 10, 0, 10)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 35, 60)
 mainFrame.BorderSizePixel = 0
 mainFrame.Active = true
 mainFrame.Draggable = true
@@ -35,204 +58,715 @@ mainFrame.Parent = screenGui
 
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, 0, 0, 30)
+title.Size = UDim2.new(1, 0, 0, 25)
 title.Position = UDim2.new(0, 0, 0, 0)
-title.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+title.BackgroundColor3 = Color3.fromRGB(45, 80, 150)
 title.BorderSizePixel = 0
 title.Text = "PiterHub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.SourceSansBold
-title.TextSize = 18
+title.TextSize = 16
 title.Parent = mainFrame
 
 local minimizeBtn = Instance.new("TextButton")
 minimizeBtn.Name = "MinimizeBtn"
-minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-minimizeBtn.Position = UDim2.new(1, -30, 0, 0)
+minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
+minimizeBtn.Position = UDim2.new(1, -25, 0, 0)
 minimizeBtn.AnchorPoint = Vector2.new(1, 0)
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 100)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(65, 95, 160)
 minimizeBtn.BorderSizePixel = 0
 minimizeBtn.Text = "-"
 minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 minimizeBtn.Font = Enum.Font.SourceSansBold
-minimizeBtn.TextSize = 18
+minimizeBtn.TextSize = 16
 minimizeBtn.Parent = mainFrame
+
+local tabContainer = Instance.new("Frame")
+tabContainer.Name = "TabContainer"
+tabContainer.Size = UDim2.new(1, 0, 0, 30)
+tabContainer.Position = UDim2.new(0, 0, 0, 25)
+tabContainer.BackgroundColor3 = Color3.fromRGB(35, 55, 90)
+tabContainer.BorderSizePixel = 0
+tabContainer.Parent = mainFrame
+
+local playerTab = Instance.new("TextButton")
+playerTab.Name = "PlayerTab"
+playerTab.Size = UDim2.new(0, 80, 1, 0)
+playerTab.Position = UDim2.new(0, 5, 0, 0)
+playerTab.BackgroundColor3 = Color3.fromRGB(55, 85, 140)
+playerTab.BorderSizePixel = 0
+playerTab.Text = "👤 Player"
+playerTab.TextColor3 = Color3.fromRGB(255, 255, 255)
+playerTab.Font = Enum.Font.SourceSans
+playerTab.TextSize = 12
+playerTab.Parent = tabContainer
+
+local espTab = Instance.new("TextButton")
+espTab.Name = "ESPTab"
+espTab.Size = UDim2.new(0, 80, 1, 0)
+espTab.Position = UDim2.new(0, 95, 0, 0)
+espTab.BackgroundColor3 = Color3.fromRGB(35, 55, 90)
+espTab.BorderSizePixel = 0
+espTab.Text = "👁️ ESP"
+espTab.TextColor3 = Color3.fromRGB(200, 200, 200)
+espTab.Font = Enum.Font.SourceSans
+espTab.TextSize = 12
+espTab.Parent = tabContainer
+
+local infoTab = Instance.new("TextButton")
+infoTab.Name = "InfoTab"
+infoTab.Size = UDim2.new(0, 80, 1, 0)
+infoTab.Position = UDim2.new(0, 185, 0, 0)
+infoTab.BackgroundColor3 = Color3.fromRGB(35, 55, 90)
+infoTab.BorderSizePixel = 0
+infoTab.Text = "❕ Info"
+infoTab.TextColor3 = Color3.fromRGB(200, 200, 200)
+infoTab.Font = Enum.Font.SourceSans
+infoTab.TextSize = 12
+infoTab.Parent = tabContainer
 
 local contentFrame = Instance.new("Frame")
 contentFrame.Name = "ContentFrame"
-contentFrame.Size = UDim2.new(1, -20, 1, -40)
-contentFrame.Position = UDim2.new(0, 10, 0, 35)
-contentFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+contentFrame.Size = UDim2.new(1, -10, 1, -65)
+contentFrame.Position = UDim2.new(0, 5, 0, 60)
+contentFrame.BackgroundColor3 = Color3.fromRGB(30, 45, 75)
 contentFrame.BorderSizePixel = 0
 contentFrame.Parent = mainFrame
 
--- Botões principais
-local function makeButton(name, text, pos, color, parent)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(0, 140, 0, 30)
-    btn.Position = pos
-    btn.BackgroundColor3 = color
-    btn.BorderSizePixel = 0
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.SourceSans
-    btn.TextSize = 16
-    btn.Parent = parent
-    return btn
+local playerContent = Instance.new("Frame")
+playerContent.Name = "PlayerContent"
+playerContent.Size = UDim2.new(1, 0, 1, 0)
+playerContent.Position = UDim2.new(0, 0, 0, 0)
+playerContent.BackgroundTransparency = 1
+playerContent.Visible = true
+playerContent.Parent = contentFrame
+
+local espContent = Instance.new("Frame")
+espContent.Name = "ESPContent"
+espContent.Size = UDim2.new(1, 0, 1, 0)
+espContent.Position = UDim2.new(0, 0, 0, 0)
+espContent.BackgroundTransparency = 1
+espContent.Visible = false
+espContent.Parent = contentFrame
+
+local infoContent = Instance.new("Frame")
+infoContent.Name = "InfoContent"
+infoContent.Size = UDim2.new(1, 0, 1, 0)
+infoContent.Position = UDim2.new(0, 0, 0, 0)
+infoContent.BackgroundTransparency = 1
+infoContent.Visible = false
+infoContent.Parent = contentFrame
+
+local function createSetting(frame, name, text, yPosition, defaultValue, isToggle)
+    if isToggle then
+        local button = Instance.new("TextButton")
+        button.Name = name
+        button.Size = UDim2.new(1, 0, 0, 25)
+        button.Position = UDim2.new(0, 0, 0, yPosition)
+        button.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+        button.BorderSizePixel = 0
+        button.Text = text .. ": " .. (defaultValue and "ON" or "OFF")
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.SourceSans
+        button.TextSize = 12
+        button.Parent = frame
+        return button
+    else
+        local container = Instance.new("Frame")
+        container.Name = name .. "Container"
+        container.Size = UDim2.new(1, 0, 0, 40)
+        container.Position = UDim2.new(0, 0, 0, yPosition)
+        container.BackgroundTransparency = 1
+        container.Parent = frame
+
+        local label = Instance.new("TextLabel")
+        label.Name = name .. "Label"
+        label.Size = UDim2.new(0.6, 0, 0, 15)
+        label.Position = UDim2.new(0, 0, 0, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text .. ":"
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        label.Font = Enum.Font.SourceSans
+        label.TextSize = 12
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = container
+
+        local box = Instance.new("TextBox")
+        box.Name = name
+        box.Size = UDim2.new(0, 60, 0, 20)
+        box.Position = UDim2.new(0.6, 5, 0, 0)
+        box.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
+        box.BorderSizePixel = 0
+        box.Text = tostring(defaultValue)
+        box.TextColor3 = Color3.fromRGB(255, 255, 255)
+        box.Font = Enum.Font.SourceSans
+        box.TextSize = 12
+        box.Parent = container
+
+        return box, label
+    end
 end
 
-local espToggle = makeButton("ESPToggle","ESP: OFF",UDim2.new(0,10,0,10),Color3.fromRGB(150,0,0),contentFrame)
-local teamToggle = makeButton("TeamToggle","Team Check: OFF",UDim2.new(0,170,0,10),Color3.fromRGB(150,0,0),contentFrame)
-local noclipToggle = makeButton("NoclipToggle","Noclip: OFF",UDim2.new(0,10,0,50),Color3.fromRGB(150,0,0),contentFrame)
-local baseESPToggle = makeButton("BaseESPToggle","Base ESP: OFF",UDim2.new(0,170,0,50),Color3.fromRGB(150,0,0),contentFrame)
-local brainrotESPToggle = makeButton("BrainrotESPToggle","Brainrot ESP: OFF",UDim2.new(0,10,0,90),Color3.fromRGB(150,0,0),contentFrame)
+local speedBox, speedLabel = createSetting(playerContent, "Speed", "Velocidade", 10, settings.speed, false)
+local jumpBox, jumpLabel = createSetting(playerContent, "Jump", "Força do Pulo", 55, settings.jumpPower, false)
+local noclipToggle = createSetting(playerContent, "Noclip", "Noclip", 100, settings.noclip, true)
+local highJumpToggle = createSetting(playerContent, "HighJump", "High Jump", 130, settings.highJump, true)
+local godModeToggle = createSetting(playerContent, "GodMode", "God Mode", 160, settings.godMode, true)
 
--- Labels e caixas de input
-local function makeLabel(name,text,pos,parent)
-    local lbl = Instance.new("TextLabel")
-    lbl.Name = name
-    lbl.Size = UDim2.new(0,140,0,20)
-    lbl.Position = pos
-    lbl.BackgroundColor3 = Color3.fromRGB(50,50,70)
-    lbl.BorderSizePixel = 0
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255,255,255)
-    lbl.Font = Enum.Font.SourceSans
-    lbl.TextSize = 16
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Parent = parent
-    return lbl
-end
+local espToggle = createSetting(espContent, "ESP", "ESP", 10, settings.enabled, true)
+local teamToggle = createSetting(espContent, "TeamCheck", "Team Check", 40, settings.showTeam, true)
+local distanceBox, distanceLabel = createSetting(espContent, "Distance", "Distância", 70, settings.maxDistance, false)
+local baseESPToggle = createSetting(espContent, "BaseESP", "Base Timer", 110, settings.baseESP, true)
+local brainrotESPToggle = createSetting(espContent, "BrainrotESP", "Brainrot ESP", 140, settings.brainrotESP, true)
 
-local distanceLabel = makeLabel("DistanceLabel","Distância ESP:",UDim2.new(0,10,0,130),contentFrame)
-local distanceBox = Instance.new("TextBox")
-distanceBox.Name = "DistanceBox"
-distanceBox.Size = UDim2.new(0, 80, 0, 25)
-distanceBox.Position = UDim2.new(0, 150, 0, 130)
-distanceBox.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-distanceBox.BorderSizePixel = 0
-distanceBox.Text = tostring(settings.maxDistance)
-distanceBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-distanceBox.Font = Enum.Font.SourceSans
-distanceBox.TextSize = 16
-distanceBox.Parent = contentFrame
+local infoText = Instance.new("TextLabel")
+infoText.Name = "InfoText"
+infoText.Size = UDim2.new(1, -10, 0, 100)
+infoText.Position = UDim2.new(0, 5, 0, 10)
+infoText.BackgroundTransparency = 1
+infoText.Text = "Data de criação: 28/08/2025\n\nCriador: @piterscriptsofc\n\nVersão: 2.0"
+infoText.TextColor3 = Color3.fromRGB(255, 255, 255)
+infoText.Font = Enum.Font.SourceSans
+infoText.TextSize = 12
+infoText.TextXAlignment = Enum.TextXAlignment.Left
+infoText.TextYAlignment = Enum.TextYAlignment.Top
+infoText.TextWrapped = true
+infoText.Parent = infoContent
 
-local speedLabel = makeLabel("SpeedLabel","Velocidade:",UDim2.new(0,10,0,160),contentFrame)
-local speedBox = Instance.new("TextBox")
-speedBox.Name = "SpeedBox"
-speedBox.Size = UDim2.new(0, 80, 0, 25)
-speedBox.Position = UDim2.new(0, 150, 0, 160)
-speedBox.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-speedBox.BorderSizePixel = 0
-speedBox.Text = tostring(settings.speed)
-speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedBox.Font = Enum.Font.SourceSans
-speedBox.TextSize = 16
-speedBox.Parent = contentFrame
+local discordButton = Instance.new("TextButton")
+discordButton.Name = "DiscordButton"
+discordButton.Size = UDim2.new(1, 0, 0, 30)
+discordButton.Position = UDim2.new(0, 0, 0, 120)
+discordButton.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+discordButton.BorderSizePixel = 0
+discordButton.Text = "Entrar no Discord"
+discordButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+discordButton.Font = Enum.Font.SourceSans
+discordButton.TextSize = 12
+discordButton.Parent = infoContent
 
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Name = "StatusLabel"
-statusLabel.Size = UDim2.new(0, 280, 0, 40)
-statusLabel.Position = UDim2.new(0, 10, 0, 190)
-statusLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Position = UDim2.new(0, 0, 1, -30)
+statusLabel.BackgroundColor3 = Color3.fromRGB(40, 60, 100)
 statusLabel.BorderSizePixel = 0
 statusLabel.Text = "Status: ESP desativado"
 statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 statusLabel.Font = Enum.Font.SourceSans
-statusLabel.TextSize = 14
+statusLabel.TextSize = 11
 statusLabel.TextXAlignment = Enum.TextXAlignment.Left
 statusLabel.TextYAlignment = Enum.TextYAlignment.Top
 statusLabel.Parent = contentFrame
 
--- Variáveis auxiliares
 local minimized = false
 local espHighlights = {}
-local baseHighlights = {}
-local brainrotHighlights = {}
-local noclipConnection
+local nameBillboards = {}
 local baseBillboards = {}
-local lastBaseUpdate = 0
+local brainrotBillboards = {}
+local noclipConnection
+local jumpConnection
+local godModeConnection
 
--- Funções auxiliares (isTeammate, distance, createESP, removeESP etc.)
--- [ ... aqui vem TODAS as funções como estavam no original ... ]
--- Incluindo a função updateBaseESP já corrigida que mostrei antes
+local function switchTab(tab)
+    playerContent.Visible = (tab == "player")
+    espContent.Visible = (tab == "esp")
+    infoContent.Visible = (tab == "info")
+    
+    playerTab.BackgroundColor3 = (tab == "player") and Color3.fromRGB(55, 85, 140) or Color3.fromRGB(35, 55, 90)
+    playerTab.TextColor3 = (tab == "player") and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+    
+    espTab.BackgroundColor3 = (tab == "esp") and Color3.fromRGB(55, 85, 140) or Color3.fromRGB(35, 55, 90)
+    espTab.TextColor3 = (tab == "esp") and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+    
+    infoTab.BackgroundColor3 = (tab == "info") and Color3.fromRGB(55, 85, 140) or Color3.fromRGB(35, 55, 90)
+    infoTab.TextColor3 = (tab == "info") and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 200)
+end
 
--- Substitua sua função antiga por esta:
-local function updateBaseESP()
-    if not settings.baseESP then
-        for base, highlight in pairs(baseHighlights) do
-            highlight:Destroy()
-            if baseBillboards[base] then
-                baseBillboards[base]:Destroy()
+local function isTeammate(player)
+    if not settings.showTeam then return false end
+    if player.Team and LocalPlayer.Team then
+        return player.Team == LocalPlayer.Team
+    end
+    return false
+end
+
+local function calculateDistance(position1, position2)
+    return (position1 - position2).Magnitude
+end
+
+local function createESP(player)
+    if not player.Character then 
+        if espHighlights[player] then
+            espHighlights[player]:Destroy()
+            espHighlights[player] = nil
+        end
+        if nameBillboards[player] then
+            nameBillboards[player]:Destroy()
+            nameBillboards[player] = nil
+        end
+        return false 
+    end
+    
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    
+    if not humanoid or not humanoidRootPart or humanoid.Health <= 0 then
+        if espHighlights[player] then
+            espHighlights[player]:Destroy()
+            espHighlights[player] = nil
+        end
+        if nameBillboards[player] then
+            nameBillboards[player]:Destroy()
+            nameBillboards[player] = nil
+        end
+        return false
+    end
+    
+    local localRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localRootPart then return false end
+    
+    local distance = calculateDistance(humanoidRootPart.Position, localRootPart.Position)
+    if distance > settings.maxDistance then
+        if espHighlights[player] then
+            espHighlights[player]:Destroy()
+            espHighlights[player] = nil
+        end
+        if nameBillboards[player] then
+            nameBillboards[player]:Destroy()
+            nameBillboards[player] = nil
+        end
+        return false
+    end
+    
+    if not espHighlights[player] then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ESPHighlight"
+        highlight.Adornee = player.Character
+        highlight.FillTransparency = 0.8
+        highlight.OutlineTransparency = 0
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.FillColor = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
+        highlight.OutlineColor = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
+        highlight.Parent = screenGui
+        
+        espHighlights[player] = highlight
+    end
+    
+    if not nameBillboards[player] then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "PlayerName"
+        billboard.Size = UDim2.new(0, 200, 0, 40)
+        billboard.StudsOffset = Vector3.new(0, 6, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Adornee = humanoidRootPart
+        billboard.Parent = screenGui
+        
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = player.Name
+        textLabel.TextColor3 = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
+        textLabel.TextScaled = true
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.Parent = billboard
+        
+        nameBillboards[player] = billboard
+    end
+    
+    return true
+end
+
+local function removeESP(player)
+    if espHighlights[player] then
+        espHighlights[player]:Destroy()
+        espHighlights[player] = nil
+    end
+    if nameBillboards[player] then
+        nameBillboards[player]:Destroy()
+        nameBillboards[player] = nil
+    end
+end
+
+local function findTimerText(basePart)
+    for _, descendant in pairs(basePart:GetDescendants()) do
+        if (descendant:IsA("TextLabel") or descendant:IsA("TextButton")) and descendant.Text then
+            local text = descendant.Text
+            if text:find("s") and text:match("%d") then
+                return text
             end
         end
-        baseHighlights = {}
+    end
+    return "60s"
+end
+
+local function updateBaseESP()
+    if not settings.baseESP then
+        for _, billboard in pairs(baseBillboards) do
+            billboard:Destroy()
+        end
         baseBillboards = {}
         return
     end
-
-    local currentTime = tick()
-    if currentTime - lastBaseUpdate < 2 then return end
-    lastBaseUpdate = currentTime
-
+    
     local foundBases = {}
-
+    
     for _, obj in pairs(Workspace:GetDescendants()) do
-        if (obj.Name:lower():find("base") or obj:IsA("Model")) then
-            if not baseHighlights[obj] then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "BaseHighlight"
-                highlight.Adornee = obj
-                highlight.FillTransparency = 0.9
-                highlight.OutlineTransparency = 0
-                highlight.FillColor = settings.baseColor
-                highlight.OutlineColor = settings.baseColor
-                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                highlight.Parent = obj
-                baseHighlights[obj] = highlight
+        if (obj.Name:lower():find("base") or obj.Name:lower():find("servidor")) and obj:IsA("Model") then
+            local primaryPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            if primaryPart then
+                if not baseBillboards[obj] then
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Name = "BaseTimer"
+                    billboard.Size = UDim2.new(0, 200, 0, 50)
+                    billboard.StudsOffset = Vector3.new(0, 5, 0)
+                    billboard.AlwaysOnTop = true
+                    billboard.Adornee = primaryPart
+                    billboard.Parent = screenGui
+                    
+                    local textLabel = Instance.new("TextLabel")
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Text = findTimerText(obj)
+                    textLabel.TextColor3 = settings.baseColor
+                    textLabel.TextScaled = true
+                    textLabel.Font = Enum.Font.SourceSansBold
+                    textLabel.Parent = billboard
+                    
+                    baseBillboards[obj] = billboard
+                end
+                foundBases[obj] = true
+                
+                if baseBillboards[obj] and baseBillboards[obj].Parent then
+                    local textLabel = baseBillboards[obj]:FindFirstChildWhichIsA("TextLabel")
+                    if textLabel then
+                        textLabel.Text = findTimerText(obj)
+                    end
+                end
             end
-
-            if not baseBillboards[obj] then
-                local billboard = Instance.new("BillboardGui")
-                billboard.Name = "BaseTimerESP"
-                billboard.Size = UDim2.new(0, 200, 0, 50)
-                billboard.StudsOffset = Vector3.new(0, 8, 0)
-                billboard.AlwaysOnTop = true
-                billboard.Adornee = obj
-                billboard.Parent = obj
-
-                local textLabel = Instance.new("TextLabel")
-                textLabel.Size = UDim2.new(1, 0, 1, 0)
-                textLabel.BackgroundTransparency = 1
-                textLabel.Text = "Carregando..."
-                textLabel.TextColor3 = Color3.new(1, 1, 1)
-                textLabel.TextScaled = true
-                textLabel.Font = Enum.Font.SourceSansBold
-                textLabel.Parent = billboard
-
-                baseBillboards[obj] = billboard
-            end
-
-            local label = baseBillboards[obj]:FindFirstChild("TextLabel")
-            if label then
-                label.Text = (getBaseTime(obj) or 60) .. "s"
-            end
-
-            foundBases[obj] = true
         end
     end
-
-    for base, highlight in pairs(baseHighlights) do
-        if not foundBases[base] then
-            highlight:Destroy()
-            baseHighlights[base] = nil
-            if baseBillboards[base] then
-                baseBillboards[base]:Destroy()
-                baseBillboards[base] = nil
-            end
+    
+    for obj, billboard in pairs(baseBillboards) do
+        if not foundBases[obj] then
+            billboard:Destroy()
+            baseBillboards[obj] = nil
         end
     end
 end
 
--- [ resto do código com updateBrainrotESP, updateESP, binds dos botões, etc. igual ao seu original ]
+local function findBrainrotValue(obj)
+    for _, descendant in pairs(obj:GetDescendants()) do
+        if (descendant:IsA("TextLabel") or descendant:IsA("TextButton")) and descendant.Text then
+            local text = descendant.Text
+            if text:find("$") and text:find("M/s") then
+                return text
+            end
+        end
+    end
+    return "$0M/s"
+end
+
+local function updateBrainrotESP()
+    if not settings.brainrotESP then
+        for _, billboard in pairs(brainrotBillboards) do
+            billboard:Destroy()
+        end
+        brainrotBillboards = {}
+        return
+    end
+    
+    local foundBrainrots = {}
+    
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj.Name:lower():find("brainrot") and obj:IsA("Model") then
+            local primaryPart = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+            if primaryPart then
+                if not brainrotBillboards[obj] then
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Name = "BrainrotValue"
+                    billboard.Size = UDim2.new(0, 200, 0, 50)
+                    billboard.StudsOffset = Vector3.new(0, 5, 0)
+                    billboard.AlwaysOnTop = true
+                    billboard.Adornee = primaryPart
+                    billboard.Parent = screenGui
+                    
+                    local textLabel = Instance.new("TextLabel")
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Text = findBrainrotValue(obj)
+                    textLabel.TextColor3 = settings.brainrotColor
+                    textLabel.TextScaled = true
+                    textLabel.Font = Enum.Font.SourceSansBold
+                    textLabel.Parent = billboard
+                    
+                    brainrotBillboards[obj] = billboard
+                end
+                foundBrainrots[obj] = true
+                
+                if brainrotBillboards[obj] and brainrotBillboards[obj].Parent then
+                    local textLabel = brainrotBillboards[obj]:FindFirstChildWhichIsA("TextLabel")
+                    if textLabel then
+                        textLabel.Text = findBrainrotValue(obj)
+                    end
+                end
+            end
+        end
+    end
+    
+    for obj, billboard in pairs(brainrotBillboards) do
+        if not foundBrainrots[obj] then
+            billboard:Destroy()
+            brainrotBillboards[obj] = nil
+        end
+    end
+end
+
+local function updateESP()
+    if not settings.enabled then
+        for player in pairs(espHighlights) do
+            removeESP(player)
+        end
+        return
+    end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            createESP(player)
+        end
+    end
+end
+
+local function updateSpeed()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = settings.speed
+    end
+end
+
+local function updateJumpPower()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.JumpPower = settings.jumpPower
+    end
+end
+
+local function updateNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    
+    if settings.noclip then
+        noclipConnection = RunService.Stepped:Connect(function()
+            if LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end
+
+local function updateGodMode()
+    if godModeConnection then
+        godModeConnection:Disconnect()
+        godModeConnection = nil
+    end
+    
+    if settings.godMode then
+        godModeConnection = RunService.Heartbeat:Connect(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.Health = 100
+            end
+        end)
+    end
+end
+
+local function updateHighJump()
+    if jumpConnection then
+        jumpConnection:Disconnect()
+        jumpConnection = nil
+    end
+    
+    if settings.highJump then
+        jumpConnection = UserInputService.JumpRequest:Connect(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                local humanoid = LocalPlayer.Character.Humanoid
+                local rootPart = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    rootPart.Velocity = Vector3.new(rootPart.Velocity.X, math.min(settings.jumpPower, 75), rootPart.Velocity.Z)
+                end
+            end
+        end)
+    end
+end
+
+local function updateStatus()
+    local status = "Status: "
+    if settings.enabled then
+        status = status .. "ESP ativo"
+        if settings.showTeam then
+            status = status .. " com Team Check"
+        else
+            status = status .. " sem Team Check"
+        end
+    else
+        status = status .. "ESP desativado"
+    end
+    statusLabel.Text = status
+end
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        mainFrame.Size = UDim2.new(0, 280, 0, 25)
+        contentFrame.Visible = false
+        tabContainer.Visible = false
+        minimizeBtn.Text = "+"
+    else
+        mainFrame.Size = UDim2.new(0, 280, 0, 320)
+        contentFrame.Visible = true
+        tabContainer.Visible = true
+        minimizeBtn.Text = "-"
+    end
+end)
+
+playerTab.MouseButton1Click:Connect(function()
+    switchTab("player")
+end)
+
+espTab.MouseButton1Click:Connect(function()
+    switchTab("esp")
+end)
+
+infoTab.MouseButton1Click:Connect(function()
+    switchTab("info")
+end)
+
+discordButton.MouseButton1Click:Connect(function()
+    setclipboard("https://discord.gg/xitado")
+    discordButton.Text = "Link copiado!"
+    wait(2)
+    discordButton.Text = "Entrar no Discord"
+end)
+
+espToggle.MouseButton1Click:Connect(function()
+    settings.enabled = not settings.enabled
+    espToggle.BackgroundColor3 = settings.enabled and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    espToggle.Text = "ESP: " .. (settings.enabled and "ON" or "OFF")
+    updateESP()
+    updateStatus()
+end)
+
+teamToggle.MouseButton1Click:Connect(function()
+    settings.showTeam = not settings.showTeam
+    teamToggle.BackgroundColor3 = settings.showTeam and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    teamToggle.Text = "Team Check: " .. (settings.showTeam and "ON" or "OFF")
+    updateESP()
+    updateStatus()
+end)
+
+noclipToggle.MouseButton1Click:Connect(function()
+    settings.noclip = not settings.noclip
+    noclipToggle.BackgroundColor3 = settings.noclip and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    noclipToggle.Text = "Noclip: " .. (settings.noclip and "ON" or "OFF")
+    updateNoclip()
+end)
+
+baseESPToggle.MouseButton1Click:Connect(function()
+    settings.baseESP = not settings.baseESP
+    baseESPToggle.BackgroundColor3 = settings.baseESP and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    baseESPToggle.Text = "Base Timer: " .. (settings.baseESP and "ON" or "OFF")
+    updateBaseESP()
+end)
+
+brainrotESPToggle.MouseButton1Click:Connect(function()
+    settings.brainrotESP = not settings.brainrotESP
+    brainrotESPToggle.BackgroundColor3 = settings.brainrotESP and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    brainrotESPToggle.Text = "Brainrot ESP: " .. (settings.brainrotESP and "ON" or "OFF")
+    updateBrainrotESP()
+end)
+
+highJumpToggle.MouseButton1Click:Connect(function()
+    settings.highJump = not settings.highJump
+    highJumpToggle.BackgroundColor3 = settings.highJump and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    highJumpToggle.Text = "High Jump: " .. (settings.highJump and "ON" or "OFF")
+    updateHighJump()
+end)
+
+godModeToggle.MouseButton1Click:Connect(function()
+    settings.godMode = not settings.godMode
+    godModeToggle.BackgroundColor3 = settings.godMode and Color3.fromRGB(0, 120, 200) or Color3.fromRGB(80, 30, 30)
+    godModeToggle.Text = "God Mode: " .. (settings.godMode and "ON" or "OFF")
+    updateGodMode()
+end)
+
+distanceBox.FocusLost:Connect(function()
+    local newDistance = tonumber(distanceBox.Text)
+    if newDistance and newDistance > 0 then
+        settings.maxDistance = newDistance
+        distanceBox.Text = tostring(settings.maxDistance)
+        updateESP()
+    else
+        distanceBox.Text = tostring(settings.maxDistance)
+    end
+end)
+
+speedBox.FocusLost:Connect(function()
+    local newSpeed = tonumber(speedBox.Text)
+    if newSpeed and newSpeed >= 0 then
+        settings.speed = newSpeed
+        speedBox.Text = tostring(settings.speed)
+        updateSpeed()
+    else
+        speedBox.Text = tostring(settings.speed)
+    end
+end)
+
+jumpBox.FocusLost:Connect(function()
+    local newJump = tonumber(jumpBox.Text)
+    if newJump and newJump > 0 then
+        settings.jumpPower = math.min(newJump, 100)
+        jumpBox.Text = tostring(settings.jumpPower)
+        updateJumpPower()
+    else
+        jumpBox.Text = tostring(settings.jumpPower)
+    end
+end)
+
+local function characterAdded(character)
+    task.wait(1)
+    updateSpeed()
+    updateJumpPower()
+    updateNoclip()
+    updateHighJump()
+    updateGodMode()
+    updateESP()
+end
+
+LocalPlayer.CharacterAdded:Connect(characterAdded)
+
+if LocalPlayer.Character then
+    characterAdded(LocalPlayer.Character)
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1)
+        updateESP()
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
+
+RunService.Heartbeat:Connect(function()
+    updateESP()
+    updateBaseESP()
+    updateBrainrotESP()
+end)
+
+updateStatus()
+switchTab("player")
