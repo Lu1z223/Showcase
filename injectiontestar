@@ -23,7 +23,7 @@ local settings = {
 }
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PiterHub"
+screenGui.Name = "PiterHubB"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
