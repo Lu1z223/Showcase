@@ -23,7 +23,7 @@ local settings = {
 }
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "PiterGAb"
+screenGui.Name = "Piter"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 local mainFrame = Instance.new("Frame")
@@ -282,6 +282,86 @@ local function updateBaseESP()
             if baseBillboards[base] then
                 baseBillboards[base]:Destroy()
             end
+        end
+        baseHighlights = {}
+        baseBillboards = {}
+        return
+    end
+    
+    local currentTime = tick()
+    if currentTime - lastBaseUpdate < 2 then
+        return
+    end
+    lastBaseUpdate = currentTime
+    
+    local foundBases = {}
+    
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if (obj.Name:lower():find("base") or obj:IsA("Model")) then
+            
+            -- Highlight da base
+            if not baseHighlights[obj] then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "BaseHighlight"
+                highlight.Adornee = obj
+                highlight.FillTransparency = 0.9
+                highlight.OutlineTransparency = 0
+                highlight.FillColor = settings.baseColor
+                highlight.OutlineColor = settings.baseColor
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                highlight.Parent = obj
+                baseHighlights[obj] = highlight
+            end
+            
+            -- Billboard para o timer da base
+            if not baseBillboards[obj] then
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = "BaseTimerESP"
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.StudsOffset = Vector3.new(0, 8, 0)
+                billboard.AlwaysOnTop = true
+                billboard.Adornee = obj
+                billboard.Parent = obj
+
+                local textLabel = Instance.new("TextLabel")
+                textLabel.Size = UDim2.new(1, 0, 1, 0)
+                textLabel.BackgroundTransparency = 1
+                textLabel.Text = "Carregando..."
+                textLabel.TextColor3 = Color3.new(1, 1, 1)
+                textLabel.TextScaled = true
+                textLabel.Font = Enum.Font.SourceSansBold
+                textLabel.Parent = billboard
+
+                baseBillboards[obj] = billboard
+            end
+
+            -- Atualiza o texto do timer
+            local label = baseBillboards[obj]:FindFirstChild("TextLabel")
+            if label then
+                local baseTime = getBaseTime(obj)
+                if baseTime then
+                    label.Text = baseTime .. "s"
+                else
+                    label.Text = "60s"
+                end
+            end
+
+            foundBases[obj] = true
+        end
+    end
+    
+    -- Remove bases que sumiram
+    for base, highlight in pairs(baseHighlights) do
+        if not foundBases[base] then
+            highlight:Destroy()
+            baseHighlights[base] = nil
+            if baseBillboards[base] then
+                baseBillboards[base]:Destroy()
+                baseBillboards[base] = nil
+            end
+        end
+    end
+end
         end
         baseHighlights = {}
         baseBillboards = {}
