@@ -1,3 +1,6 @@
+
+
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -198,7 +201,6 @@ local noclipConnection
 local baseBillboards = {}
 local lastBaseUpdate = 0
 
--- funções auxiliares
 local function isTeammate(player)
     if not settings.showTeam then return false end
     if player.Team and LocalPlayer.Team then
@@ -209,6 +211,44 @@ end
 
 local function calculateDistance(position1, position2)
     return (position1 - position2).Magnitude
+end
+
+local function createESP(player)
+    if not player.Character then return false end
+    
+    if espHighlights[player] then
+        if espHighlights[player].Parent == player.Character then
+            return true
+        else
+            espHighlights[player]:Destroy()
+            espHighlights[player] = nil
+        end
+    end
+    
+    local humanoid = player.Character:FindFirstChild("Humanoid")
+    local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+    
+    if not humanoid or not humanoidRootPart or humanoid.Health <= 0 then return false end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESPHighlight"
+    highlight.Adornee = player.Character
+    highlight.FillTransparency = 0.8
+    highlight.OutlineTransparency = 0
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.FillColor = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
+    highlight.OutlineColor = isTeammate(player) and settings.teamColors.ally or settings.teamColors.enemy
+    highlight.Parent = player.Character
+    
+    espHighlights[player] = highlight
+    return true
+end
+
+local function removeESP(player)
+    if espHighlights[player] then
+        espHighlights[player]:Destroy()
+        espHighlights[player] = nil
+    end
 end
 
 local function findBaseTimerText(basePart)
@@ -235,28 +275,27 @@ local function getBaseTime(basePart)
     return nil
 end
 
--- ✅ updateBaseESP corrigido
 local function updateBaseESP()
     if not settings.baseESP then
         for base, highlight in pairs(baseHighlights) do
             highlight:Destroy()
             if baseBillboards[base] then
-                baseBillboards[base].Parent:Destroy()
+                baseBillboards[base]:Destroy()
             end
         end
         baseHighlights = {}
         baseBillboards = {}
         return
     end
-
+    
     local currentTime = tick()
     if currentTime - lastBaseUpdate < 2 then
         return
     end
     lastBaseUpdate = currentTime
-
+    
     local foundBases = {}
-
+    
     for _, obj in pairs(Workspace:GetDescendants()) do
         if (obj.Name:lower():find("base") or obj:IsA("Model")) and not baseHighlights[obj] then
             if not obj:FindFirstChild("BaseHighlight") then
@@ -269,36 +308,36 @@ local function updateBaseESP()
                 highlight.OutlineColor = settings.baseColor
                 highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
                 highlight.Parent = obj
-
+                
                 baseHighlights[obj] = highlight
                 foundBases[obj] = true
             end
         end
     end
-
+    
     for base, highlight in pairs(baseHighlights) do
         if not base.Parent or not base:IsDescendantOf(Workspace) then
             highlight:Destroy()
             baseHighlights[base] = nil
             if baseBillboards[base] then
-                baseBillboards[base].Parent:Destroy()
+                baseBillboards[base]:Destroy()
                 baseBillboards[base] = nil
             end
         else
             foundBases[base] = true
         end
     end
-
+    
     for base, _ in pairs(foundBases) do
         if not baseBillboards[base] then
             local billboard = Instance.new("BillboardGui")
             billboard.Name = "BaseTimerESP"
-            billboard.Size = UDim2.new(0, 250, 0, 80) -- maior
-            billboard.StudsOffset = Vector3.new(0, 10, 0) -- mais alto
+            billboard.Size = UDim2.new(0, 200, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 8, 0)
             billboard.AlwaysOnTop = true
             billboard.Adornee = base
             billboard.Parent = base
-
+            
             local textLabel = Instance.new("TextLabel")
             textLabel.Size = UDim2.new(1, 0, 1, 0)
             textLabel.BackgroundTransparency = 1
@@ -306,23 +345,239 @@ local function updateBaseESP()
             textLabel.TextColor3 = Color3.new(1, 1, 1)
             textLabel.TextScaled = true
             textLabel.Font = Enum.Font.SourceSansBold
-            textLabel.TextStrokeTransparency = 0.2
-            textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
             textLabel.Parent = billboard
-
+            
             baseBillboards[base] = textLabel
         end
-
+        
         local baseTime = getBaseTime(base)
         if baseTime then
-            baseBillboards[base].Text = tostring(baseTime) .. "s"
+            baseBillboards[base].Text = baseTime .. "s"
         else
             baseBillboards[base].Text = "60s"
         end
     end
 end
 
--- resto do script continua igual...
--- (updateESP, updateBrainrotESP, speed, noclip, eventos etc)
+local function updateBrainrotESP()
+    if not settings.brainrotESP then
+        for _, highlight in pairs(brainrotHighlights) do
+            highlight:Destroy()
+        end
+        brainrotHighlights = {}
+        return
+    end
+    
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj.Name:lower():find("brainrot") and not brainrotHighlights[obj] then
+            local highlight = Instance.new("Highlight")
+            highlight.Name = "BrainrotHighlight"
+            highlight.Adornee = obj
+            highlight.FillTransparency = 0.7
+            highlight.OutlineTransparency = 0
+            highlight.FillColor = settings.brainrotColor
+            highlight.OutlineColor = settings.brainrotColor
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = obj
+            
+            brainrotHighlights[obj] = highlight
+        end
+    end
+end
+
+local function updateESP()
+    if not settings.enabled then
+        for player in pairs(espHighlights) do
+            removeESP(player)
+        end
+        return
+    end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            local localRootPart = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            
+            if player.Character and localRootPart then
+                local humanoidRootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                
+                if humanoidRootPart then
+                    local distance = calculateDistance(humanoidRootPart.Position, localRootPart.Position)
+                    
+                    if distance <= settings.maxDistance then
+                        createESP(player)
+                    else
+                        removeESP(player)
+                    end
+                else
+                    removeESP(player)
+                end
+            else
+                removeESP(player)
+            end
+        end
+    end
+end
+
+local function updateSpeed()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = settings.speed
+    end
+end
+
+local function updateNoclip()
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+    
+    if settings.noclip then
+        noclipConnection = RunService.Stepped:Connect(function()
+            if LocalPlayer.Character then
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end
+end
+
+local function updateStatus()
+    local status = "Status: "
+    if settings.enabled then
+        status = status .. "ESP ativo"
+        if settings.showTeam then
+            status = status .. " com Team Check"
+        else
+            status = status .. " sem Team Check"
+        end
+    else
+        status = status .. "ESP desativado"
+    end
+    statusLabel.Text = status
+end
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        mainFrame.Size = UDim2.new(0, 320, 0, 30)
+        contentFrame.Visible = false
+        minimizeBtn.Text = "+"
+    else
+        mainFrame.Size = UDim2.new(0, 320, 0, 340)
+        contentFrame.Visible = true
+        minimizeBtn.Text = "-"
+    end
+end)
+
+espToggle.MouseButton1Click:Connect(function()
+    settings.enabled = not settings.enabled
+    espToggle.BackgroundColor3 = settings.enabled and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    espToggle.Text = "ESP: " .. (settings.enabled and "ON" or "OFF")
+    updateESP()
+    updateStatus()
+end)
+
+teamToggle.MouseButton1Click:Connect(function()
+    settings.showTeam = not settings.showTeam
+    teamToggle.BackgroundColor3 = settings.showTeam and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    teamToggle.Text = "Team Check: " .. (settings.showTeam and "ON" or "OFF")
+    updateESP()
+    updateStatus()
+end)
+
+noclipToggle.MouseButton1Click:Connect(function()
+    settings.noclip = not settings.noclip
+    noclipToggle.BackgroundColor3 = settings.noclip and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    noclipToggle.Text = "Noclip: " .. (settings.noclip and "ON" or "OFF")
+    updateNoclip()
+end)
+
+baseESPToggle.MouseButton1Click:Connect(function()
+    settings.baseESP = not settings.baseESP
+    baseESPToggle.BackgroundColor3 = settings.baseESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    baseESPToggle.Text = "Base ESP: " .. (settings.baseESP and "ON" or "OFF")
+    updateBaseESP()
+end)
+
+brainrotESPToggle.MouseButton1Click:Connect(function()
+    settings.brainrotESP = not settings.brainrotESP
+    brainrotESPToggle.BackgroundColor3 = settings.brainrotESP and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    brainrotESPToggle.Text = "Brainrot ESP: " .. (settings.brainrotESP and "ON" or "OFF")
+    updateBrainrotESP()
+end)
+
+distanceBox.FocusLost:Connect(function()
+    local newDistance = tonumber(distanceBox.Text)
+    if newDistance and newDistance > 0 then
+        settings.maxDistance = newDistance
+        distanceBox.Text = tostring(settings.maxDistance)
+        updateESP()
+    else
+        distanceBox.Text = tostring(settings.maxDistance)
+    end
+end)
+
+speedBox.FocusLost:Connect(function()
+    local newSpeed = tonumber(speedBox.Text)
+    if newSpeed and newSpeed >= 0 then
+        settings.speed = newSpeed
+        speedBox.Text = tostring(settings.speed)
+        updateSpeed()
+    else
+        speedBox.Text = tostring(settings.speed)
+    end
+end)
+
+local heartbeatConnection
+heartbeatConnection = RunService.Heartbeat:Connect(function()
+    updateESP()
+    updateBaseESP()
+    updateBrainrotESP()
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        task.wait(1)
+        updateESP()
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    removeESP(player)
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        player.CharacterAdded:Connect(function(character)
+            task.wait(1)
+            updateESP()
+        end)
+        
+        if player.Character then
+            task.wait(1)
+            updateESP()
+        end
+    end
+end
+
+Workspace.DescendantAdded:Connect(function(descendant)
+    task.wait(2)
+    updateBaseESP()
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(character)
+    task.wait(1)
+    updateSpeed()
+    updateNoclip()
+end)
+
+if LocalPlayer.Character then
+    updateSpeed()
+    updateNoclip()
+end
+
+updateStatus()
 
 print("PiterHub carregado com sucesso! Todas as opções começam desativadas.")
