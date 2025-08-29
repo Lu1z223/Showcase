@@ -9,7 +9,7 @@ local Window = Fluent:CreateWindow({
     Title = game:GetService("MarketplaceService"):GetProductInfo(109983668079237).Name .. " 〢 Injection - Roblox",
     SubTitle = "discord.gg/scriptroblox",
     TabWidth = 160,
-    Size = UDim2.fromOffset(520, 400),
+    Size = UDim2.fromOffset(520, 320),
     Acrylic = false,
     Theme = "Darker",
     MinimizeKey = Enum.KeyCode.LeftControl
@@ -21,6 +21,21 @@ local Tabs = {
     Server = Window:AddTab({ Title = "Server", Icon = "server" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
+
+-- Botão de minimizar para celular
+Tabs.Settings:AddButton({
+    Title = "Minimizar",
+    Callback = function()
+        Window:Minimize()
+    end
+})
+
+Tabs.Settings:AddButton({
+    Title = "Restaurar",
+    Callback = function()
+        Window:Restore()
+    end
+})
 
 local plotName
 for _, plot in ipairs(workspace.Plots:GetChildren()) do
