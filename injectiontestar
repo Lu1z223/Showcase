@@ -22,38 +22,75 @@ local Tabs = {
 }
 
 -- ==========================================================
--- BOTÃO FLUTUANTE PARA CELULAR/PC
+-- BOTÃO FLUTUANTE COM ÍCONE PERSONALIZADO E DRAG
 -- ==========================================================
 local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local FloatGui = Instance.new("ScreenGui")
 FloatGui.Name = "FloatButtonGui"
 FloatGui.ResetOnSpawn = false
 FloatGui.Parent = CoreGui
 
-local Button = Instance.new("TextButton")
-Button.Size = UDim2.new(0, 100, 0, 40)
-Button.Position = UDim2.new(0.85, 0, 0.9, 0) -- canto inferior direito
-Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button.Text = "Abrir Menu"
+local Button = Instance.new("ImageButton")
+Button.Size = UDim2.new(0, 60, 0, 60) -- tamanho do ícone
+Button.Position = UDim2.new(0.9, 0, 0.85, 0) -- posição inicial
+Button.BackgroundTransparency = 1 -- fundo invisível
+Button.Image = "rbxassetid://6031097229" -- substitua pelo seu AssetId
 Button.Parent = FloatGui
 
 local minimized = true
 Window:Minimize()
 
+-- Função para abrir/restaurar
 Button.MouseButton1Click:Connect(function()
     minimized = not minimized
     if minimized then
         Window:Minimize()
-        Button.Text = "Abrir Menu"
     else
         Window:Restore()
-        Button.Text = "Fechar Menu"
     end
 end)
 
--- ==========================================================
+-- Drag
+local dragging = false
+local dragInput, mousePos, framePos
+
+local function update(input)
+    local delta = input.Position - mousePos
+    Button.Position = UDim2.new(
+        0,
+        math.clamp(framePos.X + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - Button.AbsoluteSize.X),
+        0,
+        math.clamp(framePos.Y + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - Button.AbsoluteSize.Y)
+    )
+end
+
+Button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        mousePos = input.Position
+        framePos = Button.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Button.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
 
 local plotName
 for _, plot in ipairs(workspace.Plots:GetChildren()) do
