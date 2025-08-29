@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-
 local player = Players.LocalPlayer
 local savedPosition = nil
 local flying = false
@@ -47,7 +46,7 @@ local function createToggle(name, posY, callback)
     container.BackgroundTransparency = 1
     container.Name = name
     container.Parent = frame
-
+    
     local text = Instance.new("TextLabel")
     text.Size = UDim2.new(0.7, 0, 1, 0)
     text.Position = UDim2.new(0, 0, 0, 0)
@@ -58,7 +57,7 @@ local function createToggle(name, posY, callback)
     text.TextSize = 14
     text.TextXAlignment = Enum.TextXAlignment.Left
     text.Parent = container
-
+    
     local toggleBtn = Instance.new("TextButton")
     toggleBtn.Size = UDim2.new(0.25, 0, 0.6, 0)
     toggleBtn.Position = UDim2.new(0.75, 0, 0.2, 0)
@@ -66,19 +65,23 @@ local function createToggle(name, posY, callback)
     toggleBtn.Text = ""
     toggleBtn.AutoButtonColor = false
     toggleBtn.Parent = container
-
+    
     local knob = Instance.new("Frame")
     knob.Size = UDim2.new(0.4, 0, 1, 0)
     knob.Position = UDim2.new(0, 0, 0, 0)
     knob.BackgroundColor3 = Color3.new(1, 1, 1)
     knob.Parent = toggleBtn
-
-    local knobCorner = Instance.new("UICorner", knob)
+    
+    local knobCorner = Instance.new("UICorner")
     knobCorner.CornerRadius = UDim.new(1, 0)
-    local btnCorner = Instance.new("UICorner", toggleBtn)
+    knobCorner.Parent = knob
+    
+    local btnCorner = Instance.new("UICorner")
     btnCorner.CornerRadius = UDim.new(1, 0)
-
+    btnCorner.Parent = toggleBtn
+    
     local on = false
+    
     toggleBtn.MouseButton1Click:Connect(function()
         on = not on
         local tween = TweenService:Create(knob, TweenInfo.new(0.2), {
@@ -98,11 +101,55 @@ createToggle("Speed Boost", 35, function(enabled)
     end
 end)
 
--- Save Position toggle (not really toggle, just a button action)
+-- Save Position toggle
 createToggle("Save Position", 70, function(_)
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp then
         savedPosition = hrp.Position
     end
+end)
+
+-- Steal button logic
+createToggle("Steal", 105, function(_)
+    if not savedPosition then return end
+    
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    -- Disable collisions
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+    
+    -- Float up 15 feet and freeze
+    hrp.Anchored = true
+    local floatPos = hrp.Position + Vector3.new(0, 15, 0)
+    hrp.CFrame = CFrame.new(floatPos)
+    
+    wait(0.6)
+    
+    -- Fly slowly to saved position
+    local flySpeed = 25 -- slow speed
+    local connection
+    
+    connection = RunService.RenderStepped:Connect(function()
+        local dir = (savedPosition - hrp.Position)
+        if dir.Magnitude < 2 then
+            connection:Disconnect()
+            wait(0.2)
+            -- Drop
+            hrp.Anchored = false
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        else
+            hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(savedPosition), 0.02)
+        end
+    end)
 end)
