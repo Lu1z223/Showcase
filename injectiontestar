@@ -6,8 +6,8 @@ local player = game:GetService("Players").LocalPlayer
 local shop = player.PlayerGui:FindFirstChild("Main") and player.PlayerGui.Main:FindFirstChild("CoinsShop")
 
 local Window = Fluent:CreateWindow({
-    Title = game:GetService("MarketplaceService"):GetProductInfo(109983668079237).Name .. " 〢 Stellar",
-    SubTitle = "https://discord.gg/scriptroblox",
+    Title = game:GetService("MarketplaceService"):GetProductInfo(109983668079237).Name .. " 〢 Injection - Roblox",
+    SubTitle = "discord.gg/scriptroblox",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 400),
     Acrylic = false,
@@ -16,10 +16,10 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Updates = Window:AddTab({ Title = "Info", Icon = "home" }),
-    Main = Window:AddTab({ Title = "Misc", Icon = "rocket" }),
-    Server = Window:AddTab({ Title = "Servers", Icon = "server" }),
-    Settings = Window:AddTab({ Title = "Config", Icon = "settings" }),
+    Updates = Window:AddTab({ Title = "Home", Icon = "home" }),
+    Main = Window:AddTab({ Title = "Main", Icon = "rocket" }),
+    Server = Window:AddTab({ Title = "Server", Icon = "server" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
 
 local plotName
@@ -108,7 +108,7 @@ Tabs.Main:AddButton({
         if cloak and cloak:GetAttribute("SpeedModifier") == 2 then
             cloak.Parent = workspace
         else
-            Fluent:Notify({ Title = "Stellar", Content = "Use Invisibility Cloak First", Duration = 2 })
+            Fluent:Notify({ Title = "Injection - Roblox", Content = "Use Invisibility Cloak First", Duration = 2 })
         end
     end
 })
@@ -399,7 +399,7 @@ end
 
 local MultiDropdown = Tabs.Main:AddDropdown("MultiDropdown", {
     Title = "Esp",
-    Values = {"Base", "Players", "", "", "Brainrot God", "Secret",},
+    Values = {"Lock", "Players", "Brainots"}, -- juntando os 4 em 1
     Multi = true,
     Default = {},
 })
@@ -410,16 +410,18 @@ MultiDropdown:OnChanged(function(Value)
     else
         toggleESP(false)
     end
-    activeESP["Legendary"] = Value["Legendary"] or false
-    activeESP["Mythic"] = Value["Mythic"] or false
-    activeESP["Brainrot God"] = Value["Brainrot God"] or false
-    activeESP["Secret"] = Value["Secret"] or false
+    
+    -- agrupa todos em um só
+    local raridadeAtiva = Value["Raridade"] or false
+    activeESP["Legendary"] = raridadeAtiva
+    activeESP["Mythic"] = raridadeAtiva
+    activeESP["Brainrot God"] = raridadeAtiva
+    activeESP["Secret"] = raridadeAtiva
     
     activeLockTimeEsp = Value["Lock"] or false
     updatelock()
     
     updateRESP()
-    
 end)
 
 task.spawn(function()
@@ -677,8 +679,8 @@ Tabs.Updates:AddButton({
     Title = "Discord Server",
     Description = "Copies Discord Invite Link",
     Callback = function()
-        setclipboard("")
-        Fluent:Notify({ Title = "Injection - Roblox", Content = "Copied Successfully", Duration = 2 })
+        setclipboard("https://discord.gg/scriptroblox")
+        Fluent:Notify({ Title = "Stellar", Content = "Copied Successfully", Duration = 2 })
     end
 })
 
@@ -693,3 +695,11 @@ game:GetService('Players').LocalPlayer.Idled:Connect(function()
     game:GetService('VirtualUser'):CaptureController()
     game:GetService('VirtualUser'):ClickButton2(Vector2.new())
 end)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+SaveManager:SetLibrary(Fluent)
+SaveManager:BuildConfigSection(Tabs.Settings)
+SaveManager:LoadAutoloadConfig()
+
+Window:SelectTab(1)
