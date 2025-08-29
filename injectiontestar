@@ -1,7 +1,6 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 
-
 local player = game:GetService("Players").LocalPlayer
 local shop = player.PlayerGui:FindFirstChild("Main") and player.PlayerGui.Main:FindFirstChild("CoinsShop")
 
@@ -22,20 +21,39 @@ local Tabs = {
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
 }
 
--- Botão de minimizar para celular
-Tabs.Settings:AddButton({
-    Title = "Minimizar",
-    Callback = function()
-        Window:Minimize()
-    end
-})
+-- ==========================================================
+-- BOTÃO FLUTUANTE PARA CELULAR/PC
+-- ==========================================================
+local CoreGui = game:GetService("CoreGui")
 
-Tabs.Settings:AddButton({
-    Title = "Restaurar",
-    Callback = function()
+local FloatGui = Instance.new("ScreenGui")
+FloatGui.Name = "FloatButtonGui"
+FloatGui.ResetOnSpawn = false
+FloatGui.Parent = CoreGui
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(0, 100, 0, 40)
+Button.Position = UDim2.new(0.85, 0, 0.9, 0) -- canto inferior direito
+Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.Text = "Abrir Menu"
+Button.Parent = FloatGui
+
+local minimized = true
+Window:Minimize()
+
+Button.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Window:Minimize()
+        Button.Text = "Abrir Menu"
+    else
         Window:Restore()
+        Button.Text = "Fechar Menu"
     end
-})
+end)
+
+-- ==========================================================
 
 local plotName
 for _, plot in ipairs(workspace.Plots:GetChildren()) do
@@ -111,7 +129,6 @@ player.CharacterAdded:Connect(onCharacterAdded)
 if player.Character then
     onCharacterAdded(player.Character)
 end
-
 
 Tabs.Main:AddButton({
     Title = "Invisible",
