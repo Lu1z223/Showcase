@@ -7,7 +7,7 @@ local shop = player.PlayerGui:FindFirstChild("Main") and player.PlayerGui.Main:F
 
 local Window = Fluent:CreateWindow({
     Title = game:GetService("MarketplaceService"):GetProductInfo(109983668079237).Name .. " 〢 Stellar",
-    SubTitle = "discord.gg/FmMuvkaWvG",
+    SubTitle = "https://discord.gg/scriptroblox",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 400),
     Acrylic = false,
