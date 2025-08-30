@@ -5,7 +5,7 @@ local player = game:GetService("Players").LocalPlayer
 local shop = player.PlayerGui:FindFirstChild("Main") and player.PlayerGui.Main:FindFirstChild("CoinsShop")
 
 local Window = Fluent:CreateWindow({
-    Title = game:GetService("MarketplaceService"):GetProductInfo(109983668079237).Name .. " 〢 Injection - Roblox",
+    Title = game:GetService("MarketplaceService"):GetProductInfo(109983668079237).Name .. " 〢 Injectionn - Roblox",
     SubTitle = "discord.gg/scriptroblox",
     TabWidth = 160,
     Size = UDim2.fromOffset(520, 320),
@@ -450,33 +450,31 @@ local function updateRESP()
     end
 end
 
-l-- Parte do seu dropdown ESP
+-- DROPDOWN ESP BRAINROTS
 local MultiDropdown = Tabs.Main:AddDropdown("MultiDropdown", {
     Title = "Esp",
-    Values = {"Lock", "Players", "Brainots"},
+    Values = {"Lock", "Players", "Brainots"}, -- Certifique-se que "Brainots" é o nome correto
     Multi = true,
     Default = {},
 })
 
--- Variável global para rastrear o melhor até agora
+-- Armazena o Brainrot mais valioso visto até agora
 local bestBrainrot = { Name = nil, Value = 0 }
 
--- Função para verificar um brainrot recém-detectado
+-- Atualiza o 'bestBrainrot' ao detectar algo mais valioso
 local function tryUpdateBestBrainrot(brainrot)
-    -- brainrot deve ter campos: .Name e .Value (ganho por segundo)
     if brainrot.Value > bestBrainrot.Value then
         bestBrainrot = { Name = brainrot.Name, Value = brainrot.Value }
-        print("Novo brainrot mais valioso:", brainrot.Name, "(", brainrot.Value, "/s )")
+        print("Novo brainrot mais valioso:", brainrot.Name, string.format("(%g/s)", brainrot.Value))
     end
 end
 
--- Simulando a detecção de um brainrot — substitua conforme sua lógica
--- Por exemplo, chamada quando estiver entrando/avistando um brainrot
+-- Função de detecção que deve ser chamada em evento real do jogo
 local function onBrainrotDetected(name, value)
     tryUpdateBestBrainrot({ Name = name, Value = value })
 end
 
--- Ajuste seu OnChanged para ainda manter a lógica original
+-- Integração com o dropdown ESP (mantendo a funcionalidade original)
 MultiDropdown:OnChanged(function(Value)
     toggleESP(Value["Players"] or false)
 
@@ -490,7 +488,7 @@ MultiDropdown:OnChanged(function(Value)
     updateRESP()
 end)
 
--- O loop de ESP continua como você já tem
+-- Loop que atualiza ESP regularmente
 task.spawn(function()
     while true do
         task.wait(0.25)
@@ -499,12 +497,11 @@ task.spawn(function()
     end
 end)
 
--- Exemplo de detecção (isso você adapta de acordo com seu jogo/script)
--- Digamos que em algum ponto você detecte um brainrot, chame assim:
--- onBrainrotDetected("Garama and Madundung", 50000000)  -- 50M/s
--- onBrainrotDetected("Nuclearo Dinossauro", 15000000)   -- 15M/s
--- O sistema vai registrar "Garama and Madundung" como o melhor até agora.
+-- Exemplo de chamadas de detecção (substitua pela lógica real do jogo)
+-- onBrainrotDetected("Garama and Madundung", 50000000)
+-- onBrainrotDetected("Nuclearo Dinossauro", 15000000)
 
+-- INTEGRAÇÃO DE KEYBINDS EXISTENTES
 Tabs.Main:AddKeybind("Keybind", {
     Title = "Steal Keybind",
     Mode = "Toggle",
@@ -529,7 +526,9 @@ Tabs.Main:AddKeybind("Keybind", {
     Description = "Opens/Closes shop",
     Callback = function(Value)
         shop.Visible = Value
-        shop.Position = Value and UDim2.new(0.5, 0, 0.5, 0) or UDim2.new(0.5, 0, 1.5, 0)
+        shop.Position = Value
+            and UDim2.new(0.5, 0, 0.5, 0)
+            or UDim2.new(0.5, 0, 1.5, 0)
     end,
 })
 
