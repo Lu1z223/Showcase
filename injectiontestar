@@ -126,22 +126,6 @@ Tabs.Main:AddButton({
     end
 })
 
-local SpeedSlider = Tabs.Main:AddSlider("Slider", {
-    Title = "Speed Boost",
-    Default = 0,
-    Min = 0,
-    Max = 6,
-    Rounding = 1,
-})
-
-Tabs.Main:AddParagraph({
-    Title = "Use Speed Coil/Invisibility Cloak For Higher Speed",
-})
-
-local currentSpeed = 0
-SpeedSlider:OnChanged(function(Value)
-    currentSpeed = tonumber(Value) or 0
-end)
 
 local function sSpeed(character)
     local hum = character:WaitForChild("Humanoid")
@@ -481,7 +465,7 @@ MultiDropdown:OnChanged(function(Value)
     end
     
     -- agrupa todos em um só
-    local raridadeAtiva = Value["Raridade"] or false
+    local raridadeAtiva = Value["Brainrots"] or false
     activeESP["Legendary"] = raridadeAtiva
     activeESP["Mythic"] = raridadeAtiva
     activeESP["Brainrot God"] = raridadeAtiva
