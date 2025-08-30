@@ -450,44 +450,60 @@ local function updateRESP()
     end
 end
 
+l-- Parte do seu dropdown ESP
 local MultiDropdown = Tabs.Main:AddDropdown("MultiDropdown", {
     Title = "Esp",
-    Values = {"Lock", "Players", "Brainots"}, -- juntando os 4 em 1
+    Values = {"Lock", "Players", "Brainots"},
     Multi = true,
     Default = {},
 })
 
-MultiDropdown:OnChanged(function(Value)
-    if Value["Players"] then
-        toggleESP(true)
-    else
-        toggleESP(false)
+-- Variável global para rastrear o melhor até agora
+local bestBrainrot = { Name = nil, Value = 0 }
+
+-- Função para verificar um brainrot recém-detectado
+local function tryUpdateBestBrainrot(brainrot)
+    -- brainrot deve ter campos: .Name e .Value (ganho por segundo)
+    if brainrot.Value > bestBrainrot.Value then
+        bestBrainrot = { Name = brainrot.Name, Value = brainrot.Value }
+        print("Novo brainrot mais valioso:", brainrot.Name, "(", brainrot.Value, "/s )")
     end
-    
-    -- agrupa todos em um só
-    local raridadeAtiva = Value["Brainrots"] or false
-    activeESP["Legendary"] = raridadeAtiva
-    activeESP["Mythic"] = raridadeAtiva
-    activeESP["Brainrot God"] = raridadeAtiva
-    activeESP["Secret"] = raridadeAtiva
-    
+end
+
+-- Simulando a detecção de um brainrot — substitua conforme sua lógica
+-- Por exemplo, chamada quando estiver entrando/avistando um brainrot
+local function onBrainrotDetected(name, value)
+    tryUpdateBestBrainrot({ Name = name, Value = value })
+end
+
+-- Ajuste seu OnChanged para ainda manter a lógica original
+MultiDropdown:OnChanged(function(Value)
+    toggleESP(Value["Players"] or false)
+
+    local brainotsOn = Value["Brainots"] or false
+    for _, raridade in ipairs({"Legendary", "Mythic", "Brainrot God", "Secret"}) do
+        activeESP[raridade] = brainotsOn
+    end
+
     activeLockTimeEsp = Value["Lock"] or false
     updatelock()
-    
     updateRESP()
 end)
 
+-- O loop de ESP continua como você já tem
 task.spawn(function()
     while true do
         task.wait(0.25)
-        if activeLockTimeEsp then
-            updatelock()
-        end
-        if next(activeESP) ~= nil then
-            updateRESP()
-        end
+        if activeLockTimeEsp then updatelock() end
+        if next(activeESP) ~= nil then updateRESP() end
     end
 end)
+
+-- Exemplo de detecção (isso você adapta de acordo com seu jogo/script)
+-- Digamos que em algum ponto você detecte um brainrot, chame assim:
+-- onBrainrotDetected("Garama and Madundung", 50000000)  -- 50M/s
+-- onBrainrotDetected("Nuclearo Dinossauro", 15000000)   -- 15M/s
+-- O sistema vai registrar "Garama and Madundung" como o melhor até agora.
 
 Tabs.Main:AddKeybind("Keybind", {
     Title = "Steal Keybind",
