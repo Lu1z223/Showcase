@@ -345,55 +345,57 @@ G2L["23"]["Text"] = [[ESP BASE]];
 G2L["23"]["Name"] = [[espbase]];
 G2L["23"]["Position"] = UDim2.new(0, 16, 0, 141);
 
+-- Visual tab: ESP BRAINROT (NOVO)
+G2L["50"] = Instance.new("TextButton", G2L["1c"]);
+G2L["50"]["TextWrapped"] = true;
+G2L["50"]["BorderSizePixel"] = 0;
+G2L["50"]["TextSize"] = 14;
+G2L["50"]["TextScaled"] = true;
+G2L["50"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
+G2L["50"]["BackgroundColor3"] = Color3.fromRGB(42, 174, 66);
+G2L["50"]["FontFace"] = Font.new([[rbxasset://fonts/families/Inconsolata.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L["50"]["ZIndex"] = 5;
+G2L["50"]["Size"] = UDim2.new(0, 174, 0, 34);
+G2L["50"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
+G2L["50"]["Text"] = [[ESP BRAINROT]];
+G2L["50"]["Name"] = [[espbrainrot]];
+G2L["50"]["Position"] = UDim2.new(0, 16, 0, 220);
+G2L["51"] = Instance.new("UITextSizeConstraint", G2L["50"]);
+G2L["51"]["MaxTextSize"] = 14;
+G2L["52"] = Instance.new("LocalScript", G2L["50"]);
+
+-- Adicione o script da ESP BRAINROT
+local function C_52()
 local script = G2L["52"];
 local button = script.Parent
 local TweenService = game:GetService("TweenService")
 
--- CONFIGURE: nome da pasta (folder) dos brainrots na Workspace
+-- CONFIG: ajuste se o nome da pasta de brainrots no Workspace for diferente
 local brainrotsFolder = workspace:FindFirstChild("Brainrots")
 
 local espBillboard -- Referência ao BillboardGui atual
 local isOn = false
-local prevBrainrot = nil
+local prevName = nil
+local prevValue = nil
 
--- Remove a ESP atual se existir
 local function removeESP()
-    if espBillboard then
+    if espBillboard and espBillboard.Parent then
         espBillboard:Destroy()
         espBillboard = nil
     end
-    prevBrainrot = nil
+    prevName = nil
+    prevValue = nil
 end
 
--- Cria a ESP acima do brainrot (objeto Part ou Model com PrimaryPart)
-local function createOrUpdateESP(brainrot, value)
+local function createOrUpdateESP(brainrot)
     removeESP()
-    local adornee = brainrot
-
-    -- Se brainrot for Model, procura PrimaryPart ou um Part chamado "Main"
-    if brainrot:IsA("Model") then
-        adornee = brainrot.PrimaryPart or brainrot:FindFirstChild("Main")
-        if not adornee then
-            -- Tenta pegar o primeiro Part
-            for _, v in ipairs(brainrot:GetChildren()) do
-                if v:IsA("BasePart") then
-                    adornee = v
-                    break
-                end
-            end
-        end
-    end
-    if not adornee or not adornee:IsA("BasePart") then return end
-
     espBillboard = Instance.new("BillboardGui")
     espBillboard.Name = "BrainrotESP"
     espBillboard.Size = UDim2.new(0, 220, 0, 60)
     espBillboard.StudsOffset = Vector3.new(0, 4, 0)
     espBillboard.AlwaysOnTop = true
     espBillboard.MaxDistance = 1000
-    espBillboard.Adornee = adornee
-    espBillboard.Parent = adornee
-
+    espBillboard.Adornee = brainrot
     local label = Instance.new("TextLabel")
     label.Parent = espBillboard
     label.Size = UDim2.new(1, 0, 1, 0)
@@ -404,26 +406,25 @@ local function createOrUpdateESP(brainrot, value)
     label.TextStrokeColor3 = Color3.new(0,0,0)
     label.TextScaled = true
     label.Font = Enum.Font.Inconsolata
-    label.Text = tostring(brainrot.Name).." | $"..tostring(value)
-
-    prevBrainrot = brainrot
+    label.Text = tostring(brainrot.Name).." | $"..tostring(brainrot.Value.Value)
+    espBillboard.Parent = brainrot
+    prevName = brainrot.Name
+    prevValue = brainrot.Value.Value
 end
 
--- Busca o brainrot de maior valor e retorna (obj, value)
 local function findHighestBrainrot()
-    if not brainrotsFolder then return nil, nil end
-    local highest, highestValue = nil, -math.huge
-    for _, obj in ipairs(brainrotsFolder:GetChildren()) do
-        local valueObj = obj:FindFirstChild("Value")
-        if valueObj and valueObj:IsA("NumberValue") and valueObj.Value > highestValue then
-            highest = obj
-            highestValue = valueObj.Value
+    if not brainrotsFolder then return nil end
+    local highest = nil
+    for _, obj in pairs(brainrotsFolder:GetChildren()) do
+        if obj:FindFirstChild("Value") and obj.Value:IsA("NumberValue") then
+            if not highest or obj.Value.Value > highest.Value.Value then
+                highest = obj
+            end
         end
     end
-    return highest, highestValue
+    return highest
 end
 
--- Habilita/desabilita ESP
 local function toggleESP(state)
     isOn = state
     if isOn then
@@ -431,9 +432,9 @@ local function toggleESP(state)
         button.Text = "ESP BRAINROT [ON]"
         spawn(function()
             while isOn do
-                local best, bestValue = findHighestBrainrot()
-                if best and (prevBrainrot ~= best) then
-                    createOrUpdateESP(best, bestValue)
+                local best = findHighestBrainrot()
+                if best and (not prevName or best.Value.Value ~= prevValue or best.Name ~= prevName) then
+                    createOrUpdateESP(best)
                 end
                 wait(0.75)
             end
@@ -444,13 +445,6 @@ local function toggleESP(state)
         removeESP()
     end
 end
-
-button.MouseButton1Click:Connect(function()
-    toggleESP(not isOn)
-end)
-
-button.BackgroundColor3 = Color3.fromRGB(42, 174, 66)
-button.Text = "ESP BRAINROT"
 
 button.MouseButton1Click:Connect(function()
     toggleESP(not isOn)
@@ -680,7 +674,7 @@ G2L["3c"]["BackgroundTransparency"] = 1;
 G2L["3c"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
 G2L["3c"]["Size"] = UDim2.new(0.37019, 0, 0.56098, 0);
 G2L["3c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["3c"]["Text"] = [[VORTEX]];
+G2L["3c"]["Text"] = [[Injection]];
 G2L["3c"]["Position"] = UDim2.new(0.22115, 0, 0.4878, 0);
 
 
